@@ -105,13 +105,6 @@ export default function AnalyticsPage() {
       <TopBar searchPlaceholder="Search analytics..." />
 
       <div className="p-6 space-y-6">
-        {usingDummy && !loading && (
-          <div className="flex items-center gap-2 rounded-md border border-orange-500/20 bg-orange-500/5 px-3 py-2 text-xs text-orange-500">
-            <Database className="h-3 w-3" />
-            Showing sample data — connect to backend for live data
-          </div>
-        )}
-
         <div className="flex justify-end">
           <Button variant="outline" onClick={handleExportCSV} disabled={loading || !kpis}>
             <Download className="mr-2 h-4 w-4" />
