@@ -1,102 +1,72 @@
-from pathlib import Path
-import pandas as pd
+from fastapi import APIRouter
+from sqlalchemy import func
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+from src.db import get_db_sync
+from src.modals import Trip, Vehicle
 
-VEHICLES_FILE = DATA_DIR / "vehicles.json"
-TRIPS_FILE = DATA_DIR / "trips.json"
+router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
-def analytics():
+@router.get("/kpis")
+def analytics_kpis():
+    db = get_db_sync()
 
-    if not VEHICLES_FILE.exists() or not TRIPS_FILE.exists():
-        return {}
+    completed = db.query(Trip).filter(Trip.status == "Completed").all()
+    vehicles = db.query(Vehicle).all()
 
-    vehicles = pd.read_json(VEHICLES_FILE)
-    trips = pd.read_json(TRIPS_FILE)
+    total_distance = sum(t.actualDistance or 0 for t in completed)
+    total_fuel = sum(t.fuelConsumed or 0 for t in completed)
+    total_revenue = sum(t.revenue or 0 for t in completed)
+    total_planned = sum(t.plannedDistanceKm or 0 for t in completed)
 
-    if vehicles.empty or trips.empty:
-        return {}
+    fuel_efficiency = round(total_distance / total_fuel, 2) if total_fuel else 0
+    on_trip = sum(1 for v in vehicles if v.status == "On Trip")
+    fleet_utilization = round(on_trip / len(vehicles) * 100, 2) if vehicles else 0
+    operational_cost = round(total_fuel * 90 + total_planned * 5, 2)
+    acquisition_cost = sum(v.avgCost or 0 for v in vehicles)
+    vehicle_roi = round((total_revenue - operational_cost) / acquisition_cost * 100, 2) if acquisition_cost else 0
 
-    completed = trips[trips["status"] == "Completed"]
-
-    total_distance = completed["actualDistance"].fillna(0).sum()
-    total_fuel = completed["fuelConsumed"].fillna(0).sum()
-
-    fuel_efficiency = round(
-        total_distance / total_fuel,
-        2
-    ) if total_fuel else 0
-
-    fleet_utilization = round(
-        len(vehicles[vehicles["status"] == "On Trip"])
-        / len(vehicles) * 100,
-        2
-    ) if len(vehicles) else 0
-
-    # Using plannedDistance because most demo trips have
-    # actualDistance = null
-    operational_cost = round(
-        completed["fuelConsumed"].fillna(0).sum() * 90 +
-        completed["plannedDistance"].fillna(0).sum() * 5,
-        2
-    )
-
-    total_revenue = completed["revenue"].fillna(0).sum()
-    acquisition_cost = vehicles["acquisitionCost"].sum()
-
-    vehicle_roi = round(
-        (total_revenue - operational_cost)
-        / acquisition_cost * 100,
-        2
-    ) if acquisition_cost else 0
-
-    vehicle_costs = []
-
-    for vehicle in vehicles.itertuples():
-
-        vehicle_trips = completed[
-            completed["vehicle"] == vehicle.name
-        ]
-
-        cost = (
-            vehicle_trips["fuelConsumed"].fillna(0).sum() * 90 +
-            vehicle_trips["plannedDistance"].fillna(0).sum() * 5
-        )
-
-        vehicle_costs.append({
-            "vehicle": vehicle.name,
-            "cost": round(cost, 2)
-        })
-
-    vehicle_costs.sort(
-        key=lambda x: x["cost"],
-        reverse=True
-    )
-
-    # Placeholder until trips have a completedAt/date field
-    monthly_revenue = (
-        completed["revenue"]
-        .fillna(0)
-        .tolist()
-    )
+    db.close()
 
     return {
-        "fuelEfficiency": float(fuel_efficiency),
-        "fleetUtilization": float(fleet_utilization),
+        "fuelEfficiencyKmPerL": float(fuel_efficiency),
+        "fleetUtilizationPct": float(fleet_utilization),
         "operationalCost": float(operational_cost),
-        "vehicleROI": float(vehicle_roi),
-        "monthlyRevenue": [float(x) for x in monthly_revenue],
-        "costliestVehicles": [
-            {
-                "vehicle": v["vehicle"],
-                "cost": float(v["cost"])
-            }
-            for v in vehicle_costs[:3]
-        ]
+        "vehicleRoiPct": float(vehicle_roi),
     }
 
 
-if __name__ == "__main__":
-    import pprint
-    pprint.pprint(analytics())
+@router.get("/monthly-revenue")
+def monthly_revenue():
+    db = get_db_sync()
+    completed = db.query(Trip).filter(Trip.status == "Completed").all()
+    revenues = [float(t.revenue or 0) for t in completed]
+    db.close()
+
+    return [
+        {"month": f"Trip {i + 1}", "revenue": rev}
+        for i, rev in enumerate(revenues)
+    ] if revenues else []
+
+
+@router.get("/top-costliest-vehicles")
+def top_costliest():
+    db = get_db_sync()
+    trips = db.query(Trip).filter(Trip.status == "Completed").all()
+    vehicles = {v.name: v for v in db.query(Vehicle).all()}
+    db.close()
+
+    costs = {}
+    for t in trips:
+        if t.vehicleId and t.vehicleId in [v.id for v in vehicles.values()]:
+            name = t.vehicle.name if t.vehicle else f"V-{t.vehicleId}"
+            fuel_cost = (t.fuelConsumed or 0) * 90
+            dist_cost = (t.plannedDistanceKm or 0) * 5
+            costs[name] = costs.get(name, 0) + fuel_cost + dist_cost
+
+    sorted_costs = sorted(costs.items(), key=lambda x: x[1], reverse=True)[:3]
+
+    return [
+        {"vehicleName": name, "cost": round(cost, 2)}
+        for name, cost in sorted_costs
+    ]

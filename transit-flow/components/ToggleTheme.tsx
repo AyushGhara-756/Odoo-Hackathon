@@ -1,9 +1,13 @@
 "use client";
+import { useEffect, useState } from "react";
 import { useTheme } from "@/context/theme-context";
 import { Moon, Sun } from "lucide-react";
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+  if (!mounted) return <div className="h-4 w-4" />;
   return (
     <button
       onClick={toggleTheme}

@@ -1,181 +1,200 @@
-import json
-import os
-from pathlib import Path
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
+from typing import Optional
+from sqlalchemy.orm import Session, joinedload
 
-import pandas as pd
+from src.db import get_db_sync
+from src.modals import Trip, Vehicle, Driver
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
-TRIPS_FILE = DATA_DIR / "trips.json"
-VEHICLES_FILE = DATA_DIR / "vehicles.json"
+router = APIRouter(prefix="/trips", tags=["trips"])
 
 VALID_STATUSES = {"Draft", "Dispatched", "In Transit", "Completed", "Cancelled"}
 
 
-def trips(status=None, region=None):
-    if not os.path.exists(TRIPS_FILE):
-        return []
-    trips_data = pd.read_json(TRIPS_FILE)
-    if trips_data.empty:
-        return []
+class TripCreate(BaseModel):
+    source: str
+    destination: str
+    vehicleId: int
+    driverId: int
+    cargoWeightKg: float
+    plannedDistanceKm: float
+    region: str = "West"
+
+
+def trip_to_dict(t: Trip) -> dict:
+    return {
+        "id": t.tripId,
+        "source": t.source,
+        "destination": t.destination,
+        "vehicleId": str(t.vehicleId) if t.vehicleId else None,
+        "vehicleName": t.vehicle.name if t.vehicle else None,
+        "driverId": str(t.driverId) if t.driverId else None,
+        "driverName": t.driver.name if t.driver else None,
+        "cargoWeightKg": t.cargoWeightKg,
+        "plannedDistanceKm": t.plannedDistanceKm,
+        "status": t.status,
+        "eta": t.eta,
+        "note": None,
+    }
+
+
+@router.get("")
+def list_trips(status: Optional[str] = None, region: Optional[str] = None):
+    db = get_db_sync()
+    q = db.query(Trip).options(joinedload(Trip.vehicle), joinedload(Trip.driver))
     if status:
-        trips_data = trips_data[trips_data["status"] == status]
+        q = q.filter(Trip.status == status)
     if region:
-        trips_data = trips_data[trips_data["region"] == region]
-    records = trips_data.to_dict(orient="records")
-    for rec in records:
-        for k, v in rec.items():
-            if isinstance(v, float) and pd.isna(v):
-                rec[k] = None
-            elif isinstance(v, float) and v == int(v):
-                rec[k] = int(v)
-    return records
+        q = q.filter(Trip.region == region)
+    trips = q.order_by(Trip.id.desc()).all()
+    db.close()
+    return [trip_to_dict(t) for t in trips]
 
 
-def create_trip(
-    source,
-    destination,
-    vehicle,
-    driver,
-    cargo_weight,
-    planned_distance,
-    region,
-):
-    with open(TRIPS_FILE, "r") as file:
-        trips = json.load(file)
-    with open(VEHICLES_FILE, "r") as file:
-        vehicles = json.load(file)
+@router.post("")
+def create_trip(trip: TripCreate):
+    db = get_db_sync()
+    vehicle = db.query(Vehicle).filter(Vehicle.id == trip.vehicleId).first()
+    if not vehicle:
+        db.close()
+        raise HTTPException(status_code=404, detail="Vehicle not found")
 
-    vehicle_match = next((v for v in vehicles if v["name"] == vehicle), None)
-    if vehicle_match is None:
-        return {
-            "success": False,
-            "message": "Vehicle not found"
-        }
-
-    # figure out next trip number from existing ids so deletions don't cause collisions
     max_num = 0
-    for t in trips:
-        if t["tripId"].startswith("TR") and t["tripId"][2:].isdigit():
-            max_num = max(max_num, int(t["tripId"][2:]))
+    last = db.query(Trip).order_by(Trip.id.desc()).first()
+    if last:
+        try:
+            max_num = int(last.tripId[2:])
+        except (ValueError, IndexError):
+            pass
 
-    trip = {
-        "tripId": f"TR{max_num + 1:03}",
-        "source": source,
-        "destination": destination,
-        "vehicle": vehicle,
-        "driver": driver,
-        "cargoWeight": cargo_weight,
-        "plannedDistance": planned_distance,
-        "actualDistance": None,
-        "fuelConsumed": None,
-        "startOdometer": None,
-        "endOdometer": None,
-        "revenue": 0,
-        "status": "Draft",
-        "eta": "Awaiting Dispatch",
-        "region": region
-    }
-    trips.append(trip)
-    with open(TRIPS_FILE, "w") as file:
-        json.dump(trips, file, indent=4)
-    return {
-        "success": True,
-        "message": "Trip created successfully",
-        "trip": trip
-    }
+    driver = db.query(Driver).filter(Driver.id == trip.driverId).first()
 
-
-def dispatch_trip(trip_id):
-    with open(TRIPS_FILE, "r") as file:
-        trips = json.load(file)
-    with open(VEHICLES_FILE, "r") as file:
-        vehicles = json.load(file)
-    for trip in trips:
-        if trip["tripId"] != trip_id:
-            continue
-        if trip["status"] != "Draft":
-            return {
-                "success": False,
-                "message": f"Cannot dispatch a trip with status '{trip['status']}'"
-            }
-        vehicle = next(
-            (v for v in vehicles if v["name"] == trip["vehicle"]),
-            None
+    # Check capacity before dispatch
+    if trip.cargoWeightKg > vehicle.capacityKg:
+        db.close()
+        raise HTTPException(
+            status_code=400,
+            detail=f"Capacity exceeded: {trip.cargoWeightKg}kg > {vehicle.capacityKg}kg"
         )
-        if vehicle is None:
-            return {
-                "success": False,
-                "message": "Vehicle not found"
-            }
-        capacity = vehicle["maxLoadCapacity"]
-        cargo = trip["cargoWeight"]
-        if cargo > capacity:
-            return {
-                "success": False,
-                "message": "Dispatch blocked",
-                "vehicleCapacity": capacity,
-                "cargoWeight": cargo,
-                "exceededBy": cargo - capacity
-            }
-        trip["status"] = "Dispatched"
-        with open(TRIPS_FILE, "w") as file:
-            json.dump(trips, file, indent=4)
-        return {
-            "success": True,
-            "message": "Trip dispatched successfully",
-            "trip": trip
-        }
-    return {
-        "success": False,
-        "message": "Trip not found"
-    }
 
-
-def update_trip_status(trip_id, status):
-    if status not in VALID_STATUSES:
-        return {
-            "success": False,
-            "message": f"Invalid status '{status}'"
-        }
-    with open(TRIPS_FILE, "r") as file:
-        trips = json.load(file)
-    for trip in trips:
-        if trip["tripId"] == trip_id:
-            trip["status"] = status
-            with open(TRIPS_FILE, "w") as file:
-                json.dump(trips, file, indent=4)
-            return {
-                "success": True,
-                "message": "Trip status updated",
-                "trip": trip
-            }
-    return {
-        "success": False,
-        "message": "Trip not found"
-    }
-
-
-if __name__ == "__main__":
-    print("All Trips")
-    print(trips())
-
-    print("\nCreate Trip")
-    created = create_trip(
-        source="Delhi",
-        destination="Jaipur",
-        vehicle="VAN-05",
-        driver="Alex",
-        cargo_weight=700,
-        planned_distance=280,
-        region="North"
+    new_trip = Trip(
+        tripId=f"TR{max_num + 1:03}",
+        source=trip.source,
+        destination=trip.destination,
+        vehicleId=trip.vehicleId,
+        driverId=trip.driverId,
+        cargoWeightKg=trip.cargoWeightKg,
+        plannedDistanceKm=trip.plannedDistanceKm,
+        status="Dispatched",
+        eta="In Transit",
+        region=trip.region,
+        revenue=0,
     )
-    print(created)
 
-    if created["success"]:
-        trip_id = created["trip"]["tripId"]
+    vehicle.status = "On Trip"
+    if driver:
+        driver.status = "On Trip"
 
-        print("\nDispatch Trip")
-        print(dispatch_trip(trip_id))
+    db.add(new_trip)
+    db.commit()
+    db.refresh(new_trip)
+    result = trip_to_dict(new_trip)
+    db.close()
+    return result
 
-        print("\nComplete Trip")
-        print(update_trip_status(trip_id, "Completed"))
+
+@router.get("/live")
+def live_trips():
+    db = get_db_sync()
+    trips = (
+        db.query(Trip)
+        .options(joinedload(Trip.vehicle), joinedload(Trip.driver))
+        .filter(Trip.status.in_(["Draft", "Dispatched", "In Transit"]))
+        .order_by(Trip.id.desc())
+        .all()
+    )
+    db.close()
+    return [trip_to_dict(t) for t in trips]
+
+
+@router.get("/recent")
+def recent_trips(limit: int = 5):
+    db = get_db_sync()
+    trips = (
+        db.query(Trip)
+        .options(joinedload(Trip.vehicle), joinedload(Trip.driver))
+        .order_by(Trip.id.desc())
+        .limit(limit)
+        .all()
+    )
+    db.close()
+    return [trip_to_dict(t) for t in trips]
+
+
+@router.patch("/{trip_id}/dispatch")
+def dispatch_trip(trip_id: str):
+    db = get_db_sync()
+    t = db.query(Trip).options(joinedload(Trip.vehicle), joinedload(Trip.driver)).filter(Trip.tripId == trip_id).first()
+    if not t:
+        db.close()
+        raise HTTPException(status_code=404, detail="Trip not found")
+    if t.status != "Draft":
+        db.close()
+        raise HTTPException(status_code=400, detail=f"Cannot dispatch a trip with status '{t.status}'")
+
+    if t.vehicleId:
+        vehicle = db.query(Vehicle).filter(Vehicle.id == t.vehicleId).first()
+        if vehicle and t.cargoWeightKg > vehicle.capacityKg:
+            db.close()
+            raise HTTPException(
+                status_code=400,
+                detail={
+                    "message": "Dispatch blocked",
+                    "vehicleCapacity": vehicle.capacityKg,
+                    "cargoWeight": t.cargoWeightKg,
+                    "exceededBy": t.cargoWeightKg - vehicle.capacityKg,
+                },
+            )
+
+    t.status = "Dispatched"
+    t.eta = "In Transit"
+    db.commit()
+    result = trip_to_dict(t)
+    db.close()
+    return result
+
+
+@router.patch("/{trip_id}/complete")
+def complete_trip(trip_id: str):
+    db = get_db_sync()
+    t = db.query(Trip).options(joinedload(Trip.vehicle), joinedload(Trip.driver)).filter(Trip.tripId == trip_id).first()
+    if not t:
+        db.close()
+        raise HTTPException(status_code=404, detail="Trip not found")
+    t.status = "Completed"
+    if t.vehicleId:
+        db.query(Vehicle).filter(Vehicle.id == t.vehicleId).update({"status": "Available"})
+    if t.driverId:
+        db.query(Driver).filter(Driver.id == t.driverId).update({"status": "Available"})
+    db.commit()
+    result = trip_to_dict(t)
+    db.close()
+    return result
+
+
+@router.patch("/{trip_id}/cancel")
+def cancel_trip(trip_id: str):
+    db = get_db_sync()
+    t = db.query(Trip).options(joinedload(Trip.vehicle), joinedload(Trip.driver)).filter(Trip.tripId == trip_id).first()
+    if not t:
+        db.close()
+        raise HTTPException(status_code=404, detail="Trip not found")
+    t.status = "Cancelled"
+    if t.vehicleId:
+        db.query(Vehicle).filter(Vehicle.id == t.vehicleId).update({"status": "Available"})
+    if t.driverId:
+        db.query(Driver).filter(Driver.id == t.driverId).update({"status": "Available"})
+    db.commit()
+    result = trip_to_dict(t)
+    db.close()
+    return result
