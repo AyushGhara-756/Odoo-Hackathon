@@ -6,28 +6,71 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { apiFetch } from "@/lib/api";
 import type { AnalyticsKPIs, CostliestVehicle, MonthlyRevenuePoint } from "@/lib/types";
-import { Download } from "lucide-react";
+import { Download, Database } from "lucide-react";
+
+const DUMMY_KPIS: AnalyticsKPIs = {
+  fuelEfficiencyKmPerL: 6.8,
+  fleetUtilizationPct: 72.5,
+  operationalCost: 284500,
+  vehicleRoiPct: 18.3,
+};
+
+const DUMMY_MONTHLY_REVENUE: MonthlyRevenuePoint[] = [
+  { month: "Jan", revenue: 180000 },
+  { month: "Feb", revenue: 210000 },
+  { month: "Mar", revenue: 195000 },
+  { month: "Apr", revenue: 240000 },
+  { month: "May", revenue: 225000 },
+  { month: "Jun", revenue: 260000 },
+  { month: "Jul", revenue: 310000 },
+  { month: "Aug", revenue: 290000 },
+  { month: "Sep", revenue: 275000 },
+  { month: "Oct", revenue: 320000 },
+  { month: "Nov", revenue: 345000 },
+  { month: "Dec", revenue: 380000 },
+];
+
+const DUMMY_COSTLIEST: CostliestVehicle[] = [
+  { vehicleName: "Truck-11", cost: 84500 },
+  { vehicleName: "Van-09", cost: 62300 },
+  { vehicleName: "MH-01-TR", cost: 51000 },
+];
 
 export default function AnalyticsPage() {
-  const [kpis, setKpis] = useState<AnalyticsKPIs | null>(null);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenuePoint[]>([]);
-  const [topCostliest, setTopCostliest] = useState<CostliestVehicle[]>([]);
+  const [kpis, setKpis] = useState<AnalyticsKPIs>(DUMMY_KPIS);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenuePoint[]>(DUMMY_MONTHLY_REVENUE);
+  const [topCostliest, setTopCostliest] = useState<CostliestVehicle[]>(DUMMY_COSTLIEST);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [usingDummy, setUsingDummy] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     Promise.all([
-      apiFetch<AnalyticsKPIs>("/analytics/kpis"),
-      apiFetch<MonthlyRevenuePoint[]>("/analytics/monthly-revenue"),
-      apiFetch<CostliestVehicle[]>("/analytics/top-costliest-vehicles"),
+      apiFetch<AnalyticsKPIs>("/analytics/kpis", { signal: controller.signal }),
+      apiFetch<MonthlyRevenuePoint[]>("/analytics/monthly-revenue", { signal: controller.signal }),
+      apiFetch<CostliestVehicle[]>("/analytics/top-costliest-vehicles", { signal: controller.signal }),
     ])
       .then(([k, mr, tc]) => {
-        setKpis(k);
-        setMonthlyRevenue(mr);
-        setTopCostliest(tc);
+        const hasData = mr.length > 0 || tc.length > 0 || k.operationalCost > 0;
+        if (hasData) {
+          setKpis(k);
+          setMonthlyRevenue(mr);
+          setTopCostliest(tc);
+          setUsingDummy(false);
+        }
       })
-      .catch((err) => setError(err instanceof Error ? err.message : "Failed to load analytics"))
-      .finally(() => setLoading(false));
+      .catch(() => {})
+      .finally(() => {
+        clearTimeout(timeout);
+        setLoading(false);
+      });
+
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
   }, []);
 
   const maxCost = Math.max(...topCostliest.map((v) => v.cost), 1);
@@ -62,9 +105,10 @@ export default function AnalyticsPage() {
       <TopBar searchPlaceholder="Search analytics..." />
 
       <div className="p-6 space-y-6">
-        {error && (
-          <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
-            {error}
+        {usingDummy && !loading && (
+          <div className="flex items-center gap-2 rounded-md border border-orange-500/20 bg-orange-500/5 px-3 py-2 text-xs text-orange-500">
+            <Database className="h-3 w-3" />
+            Showing sample data — connect to backend for live data
           </div>
         )}
 
@@ -77,7 +121,7 @@ export default function AnalyticsPage() {
 
         {/* KPI cards */}
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {loading || !kpis ? (
+          {loading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-20 animate-pulse rounded-md border border-border bg-card" />
             ))

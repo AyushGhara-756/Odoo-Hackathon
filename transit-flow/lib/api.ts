@@ -7,6 +7,7 @@ if (!BASE_URL) {
 
 interface ApiOptions extends RequestInit {
   params?: Record<string, string | number | boolean | undefined>;
+  signal?: AbortSignal;
 }
 
 export async function apiFetch<T>(route: string, options: ApiOptions = {}): Promise<T> {
