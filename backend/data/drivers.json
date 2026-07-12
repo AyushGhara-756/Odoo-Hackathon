@@ -7,6 +7,7 @@
     "licenseExpiry": "2028-12-01",
     "contactNumber": "9876543210",
     "safetyScore": 96,
+    "region": "West",
     "status": "Available"
   },
   {
@@ -17,6 +18,7 @@
     "licenseExpiry": "2025-03-01",
     "contactNumber": "9822012345",
     "safetyScore": 81,
+    "region": "West",
     "status": "Suspended"
   },
   {
@@ -27,6 +29,7 @@
     "licenseExpiry": "2027-08-01",
     "contactNumber": "9911002233",
     "safetyScore": 99,
+    "region": "North",
     "status": "On Trip"
   },
   {
@@ -37,6 +40,7 @@
     "licenseExpiry": "2027-01-01",
     "contactNumber": "9744011223",
     "safetyScore": 88,
+    "region": "South",
     "status": "Off Duty"
   }
 ]
