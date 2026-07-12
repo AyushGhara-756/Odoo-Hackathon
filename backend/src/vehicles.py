@@ -16,7 +16,6 @@ def get_vehicle_by_id(vehicle_id):
     match = vehicles[vehicles["id"] == vehicle_id]
     return match.to_dict(orient="records")[0] if not match.empty else None
 
-
 if __name__ == "__main__":
     print("No Filters:")
     print(get_vehicles())
