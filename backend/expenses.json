@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "vehicleId": 2,
+    "category": "Toll",
+    "amount": 520,
+    "date": "2026-07-09"
+  },
+  {
+    "id": 2,
+    "vehicleId": 3,
+    "category": "Maintenance",
+    "amount": 3500,
+    "date": "2026-07-10"
+  },
+  {
+    "id": 3,
+    "vehicleId": 1,
+    "category": "Parking",
+    "amount": 200,
+    "date": "2026-07-11"
+  }
+]

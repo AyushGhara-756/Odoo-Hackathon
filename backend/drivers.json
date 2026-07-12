@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "name": "Alex",
+    "licenseNumber": "DL-88213",
+    "licenseCategory": "LMV",
+    "licenseExpiry": "2028-12-01",
+    "contactNumber": "9876543210",
+    "safetyScore": 96,
+    "status": "Available"
+  },
+  {
+    "id": 2,
+    "name": "John",
+    "licenseNumber": "DL-44120",
+    "licenseCategory": "HMV",
+    "licenseExpiry": "2025-03-01",
+    "contactNumber": "9822012345",
+    "safetyScore": 81,
+    "status": "Suspended"
+  },
+  {
+    "id": 3,
+    "name": "Priya",
+    "licenseNumber": "DL-77031",
+    "licenseCategory": "LMV",
+    "licenseExpiry": "2027-08-01",
+    "contactNumber": "9911002233",
+    "safetyScore": 99,
+    "status": "On Trip"
+  },
+  {
+    "id": 4,
+    "name": "Suresh",
+    "licenseNumber": "DL-90045",
+    "licenseCategory": "HMV",
+    "licenseExpiry": "2027-01-01",
+    "contactNumber": "9744011223",
+    "safetyScore": 88,
+    "status": "Off Duty"
+  }
+]

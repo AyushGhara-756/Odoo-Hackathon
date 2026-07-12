@@ -1,0 +1,20 @@
+[
+  {
+    "id": 1,
+    "vehicleId": 3,
+    "maintenanceType": "Oil Change",
+    "description": "Engine oil replacement",
+    "date": "2026-07-10",
+    "cost": 3500,
+    "status": "Active"
+  },
+  {
+    "id": 2,
+    "vehicleId": 4,
+    "maintenanceType": "Brake Service",
+    "description": "Brake pads replaced",
+    "date": "2026-06-15",
+    "cost": 8500,
+    "status": "Completed"
+  }
+]

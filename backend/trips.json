@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "source": "Ahmedabad",
+    "destination": "Surat",
+    "vehicleId": 2,
+    "driverId": 3,
+    "cargoWeight": 3200,
+    "plannedDistance": 265,
+    "actualDistance": 271,
+    "fuelConsumed": 38,
+    "startOdometer": 181729,
+    "endOdometer": 182000,
+    "revenue": 24000,
+    "status": "Completed"
+  },
+  {
+    "id": 2,
+    "source": "Rajkot",
+    "destination": "Vadodara",
+    "vehicleId": 1,
+    "driverId": 1,
+    "cargoWeight": 450,
+    "plannedDistance": 220,
+    "actualDistance": null,
+    "fuelConsumed": null,
+    "startOdometer": 74000,
+    "endOdometer": null,
+    "revenue": 12000,
+    "status": "Dispatched"
+  },
+  {
+    "id": 3,
+    "source": "Pune",
+    "destination": "Mumbai",
+    "vehicleId": null,
+    "driverId": null,
+    "cargoWeight": 700,
+    "plannedDistance": 150,
+    "actualDistance": null,
+    "fuelConsumed": null,
+    "startOdometer": null,
+    "endOdometer": null,
+    "revenue": 9500,
+    "status": "Draft"
+  }
+]

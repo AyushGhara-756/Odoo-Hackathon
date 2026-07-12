@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "registrationNumber": "GJ01AB452",
+    "name": "VAN-05",
+    "type": "Van",
+    "maxLoadCapacity": 500,
+    "odometer": 74000,
+    "acquisitionCost": 620000,
+    "status": "Available"
+  },
+  {
+    "id": 2,
+    "registrationNumber": "GJ01AB998",
+    "name": "TRUCK-11",
+    "type": "Truck",
+    "maxLoadCapacity": 5000,
+    "odometer": 182000,
+    "acquisitionCost": 2450000,
+    "status": "On Trip"
+  },
+  {
+    "id": 3,
+    "registrationNumber": "GJ01AB1120",
+    "name": "MINI-03",
+    "type": "Mini Truck",
+    "maxLoadCapacity": 1000,
+    "odometer": 66000,
+    "acquisitionCost": 410000,
+    "status": "In Shop"
+  },
+  {
+    "id": 4,
+    "registrationNumber": "GJ01AB008",
+    "name": "VAN-09",
+    "type": "Van",
+    "maxLoadCapacity": 750,
+    "odometer": 241900,
+    "acquisitionCost": 590000,
+    "status": "Retired"
+  }
+]

@@ -1,0 +1,40 @@
+{
+  "fuelEfficiency": [
+    {
+      "vehicleId": 1,
+      "kmPerLiter": 12.2
+    },
+    {
+      "vehicleId": 2,
+      "kmPerLiter": 7.1
+    }
+  ],
+  "operationalCost": [
+    {
+      "vehicleId": 1,
+      "total": 2000
+    },
+    {
+      "vehicleId": 2,
+      "total": 4320
+    },
+    {
+      "vehicleId": 3,
+      "total": 3500
+    }
+  ],
+  "vehicleROI": [
+    {
+      "vehicleId": 1,
+      "roi": 0.34
+    },
+    {
+      "vehicleId": 2,
+      "roi": 0.49
+    },
+    {
+      "vehicleId": 3,
+      "roi": 0.18
+    }
+  ]
+}

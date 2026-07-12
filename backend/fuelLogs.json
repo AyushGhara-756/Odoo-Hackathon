@@ -1,0 +1,18 @@
+[
+  {
+    "id": 1,
+    "vehicleId": 2,
+    "tripId": 1,
+    "liters": 38,
+    "cost": 3800,
+    "date": "2026-07-09"
+  },
+  {
+    "id": 2,
+    "vehicleId": 1,
+    "tripId": 2,
+    "liters": 18,
+    "cost": 1800,
+    "date": "2026-07-11"
+  }
+]
