@@ -1,6 +1,5 @@
 import pandas as pd
 
-
 def get_vehicles(status=None, vehicle_type=None, region=None):
     vehicles = pd.read_json("../data/vehicles.json")
     if status:

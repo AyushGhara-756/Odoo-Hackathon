@@ -6,9 +6,21 @@ from src.analytics import analytics
 from src.dashboard import dashboard
 from src.drivers import drivers
 from src.trips import trips, create_trip, dispatch_trip, update_trip_status
+from src.vehicles import get_vehicles,get_vehicle_by_id
 
 app = FastAPI()
+from typing import Optional
+@app.get("/vehicles")
+def read_vehicles(status: Optional[str] = None, vehicle_type: Optional[str] = None, region: Optional[str] = None):
+    return get_vehicles(status=status, vehicle_type=vehicle_type, region=region)
 
+
+@app.get("/vehicles/{vehicle_id}")
+def read_vehicle(vehicle_id: int):
+    vehicle = get_vehicle_by_id(vehicle_id)
+    if vehicle is None:
+        return {"error": "Vehicle not found"}
+    return vehicle
 
 @app.get("/dashboard")
 def get_dashboard(
