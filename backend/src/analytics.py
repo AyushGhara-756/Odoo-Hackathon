@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from sqlalchemy import func
 
 from src.db import get_db_sync
-from src.modals import Trip, Vehicle
+from src.models import Trip, Vehicle
 
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 

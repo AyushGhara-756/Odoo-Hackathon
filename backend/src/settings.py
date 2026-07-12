@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 
 from src.db import get_db_sync
-from src.modals import Setting, RbacMatrix
+from src.models import Setting, RbacMatrix
 
 router = APIRouter(prefix="/settings", tags=["settings"])
 

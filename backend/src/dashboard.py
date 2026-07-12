@@ -3,7 +3,7 @@ from typing import Optional
 from sqlalchemy import func
 
 from src.db import get_db_sync
-from src.modals import Vehicle, Driver, Trip
+from src.models import Vehicle, Driver, Trip
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 

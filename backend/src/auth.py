@@ -8,7 +8,7 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from src.db import get_db_sync
-from src.modals import User, Setting, RbacMatrix
+from src.models import User, Setting, RbacMatrix
 
 SECRET_KEY = os.getenv("JWT_SECRET", "transitops-hackathon-secret-key-change-in-prod")
 ALGORITHM = "HS256"

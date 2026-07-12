@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import func
 
 from src.db import get_db_sync
-from src.modals import Expense, FuelLog, MaintenanceRecord
+from src.models import Expense, FuelLog, MaintenanceRecord
 
 router = APIRouter(prefix="/expenses", tags=["expenses"])
 

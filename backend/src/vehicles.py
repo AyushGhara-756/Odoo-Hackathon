@@ -3,9 +3,10 @@ from pydantic import BaseModel
 from typing import Optional
 
 from src.db import get_db_sync
-from src.modals import Vehicle
+from src.models import Vehicle
 
 router = APIRouter(prefix="/vehicles", tags=["vehicles"])
+root_router = APIRouter(tags=["vehicles"])
 
 
 class VehicleCreate(BaseModel):
@@ -87,6 +88,14 @@ def create_vehicle(v: VehicleCreate):
 
 @router.get("/regions")
 def regions():
+    db = get_db_sync()
+    rows = db.query(Vehicle.region).distinct().all()
+    db.close()
+    return [r[0] for r in rows]
+
+
+@root_router.get("/regions")
+def root_regions():
     db = get_db_sync()
     rows = db.query(Vehicle.region).distinct().all()
     db.close()

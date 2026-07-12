@@ -30,7 +30,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    from src.modals import Base
+    from src.models import Base
     Base.metadata.create_all(bind=engine)
 
 

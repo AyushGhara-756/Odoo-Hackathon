@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from src.db import get_db_sync
-from src.modals import MaintenanceRecord, Vehicle
+from src.models import MaintenanceRecord, Vehicle
 
 router = APIRouter(prefix="/maintenance", tags=["maintenance"])
 

@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy import func
 
 from src.db import get_db_sync
-from src.modals import Driver, Trip
+from src.models import Driver, Trip
 
 router = APIRouter(prefix="/drivers", tags=["drivers"])
 

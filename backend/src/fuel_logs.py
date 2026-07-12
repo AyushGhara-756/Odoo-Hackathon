@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from src.db import get_db_sync
-from src.modals import FuelLog
+from src.models import FuelLog
 
 router = APIRouter(prefix="/fuel-logs", tags=["fuel-logs"])
 

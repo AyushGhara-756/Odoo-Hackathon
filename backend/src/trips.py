@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy.orm import Session, joinedload
 
 from src.db import get_db_sync
-from src.modals import Trip, Vehicle, Driver
+from src.models import Trip, Vehicle, Driver
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
