@@ -7,7 +7,6 @@ from src.dashboard import dashboard
 from src.drivers import drivers
 from src.trips import trips, create_trip, dispatch_trip, update_trip_status
 
-
 app = FastAPI()
 
 
