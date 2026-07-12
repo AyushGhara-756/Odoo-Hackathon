@@ -31,9 +31,35 @@ def expense_to_dict(e: Expense) -> dict:
 
 
 @router.get("")
-def list_expenses(search: Optional[str] = None):
+def list_expenses(
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
+):
     db = get_db_sync()
-    q = db.query(Expense).order_by(Expense.id.desc())
+    q = db.query(Expense)
+    if search:
+        search_filter = (
+            Expense.tripId.ilike(f"%{search}%")
+        )
+        try:
+            search_int = int(search)
+            search_filter = search_filter | (Expense.toll == search_int) | (Expense.other == search_int)
+        except ValueError:
+            pass
+        q = q.filter(search_filter)
+    sort_map = {
+        "tripId": Expense.tripId,
+        "toll": Expense.toll,
+        "other": Expense.other,
+        "maintenanceLinked": Expense.maintenanceLinked,
+        "date": Expense.date,
+    }
+    sort_col = sort_map.get(sort_by)
+    if sort_col:
+        q = q.order_by(sort_col.desc() if sort_order == "desc" else sort_col.asc())
+    else:
+        q = q.order_by(Expense.id.desc())
     expenses = q.all()
     for e in expenses:
         _ = e.vehicle

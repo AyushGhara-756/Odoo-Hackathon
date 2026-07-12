@@ -139,13 +139,13 @@ export default function TripsPage() {
               )}
 
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Source</label>
+                <label className="text-xs text-muted-foreground">From</label>
                 <Input {...register("source")} />
                 {errors.source && <p className="text-xs text-red-500">{errors.source.message}</p>}
               </div>
 
               <div className="space-y-1">
-                <label className="text-xs text-muted-foreground">Destination</label>
+                <label className="text-xs text-muted-foreground">To</label>
                 <Input {...register("destination")} />
                 {errors.destination && <p className="text-xs text-red-500">{errors.destination.message}</p>}
               </div>

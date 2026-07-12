@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from sqlalchemy import func
+from sqlalchemy.orm import joinedload
 
 from src.db import get_db_sync
 from src.models import Trip, Vehicle
@@ -52,14 +53,13 @@ def monthly_revenue():
 @router.get("/top-costliest-vehicles")
 def top_costliest():
     db = get_db_sync()
-    trips = db.query(Trip).filter(Trip.status == "Completed").all()
-    vehicles = {v.name: v for v in db.query(Vehicle).all()}
+    trips = db.query(Trip).options(joinedload(Trip.vehicle)).filter(Trip.status == "Completed").all()
     db.close()
 
     costs = {}
     for t in trips:
-        if t.vehicleId and t.vehicleId in [v.id for v in vehicles.values()]:
-            name = t.vehicle.name if t.vehicle else f"V-{t.vehicleId}"
+        if t.vehicleId and t.vehicle:
+            name = t.vehicle.name
             fuel_cost = (t.fuelConsumed or 0) * 90
             dist_cost = (t.plannedDistanceKm or 0) * 5
             costs[name] = costs.get(name, 0) + fuel_cost + dist_cost

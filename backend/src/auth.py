@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 import os
+import secrets
 import jwt
 import bcrypt
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -84,6 +85,68 @@ def login(req: LoginRequest):
 @router.get("/me")
 def me(current_user: dict = Depends(get_current_user)):
     return MeResponse(name=current_user["name"], role=current_user["role"])
+
+
+@router.post("/signup")
+def signup(req: LoginRequest):
+    db = get_db_sync()
+    existing = db.query(User).filter(User.email == req.email).first()
+    if existing:
+        db.close()
+        raise HTTPException(status_code=409, detail="Email already registered")
+    user = User(
+        email=req.email,
+        password_hash=hash_password(req.password),
+        name=req.email.split("@")[0],
+        role="Fleet Manager",
+    )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    token = create_access_token({"user_id": user.id})
+    db.close()
+    return LoginResponse(
+        token=token,
+        user={"name": user.name, "role": user.role}
+    )
+
+
+@router.post("/forgot-password")
+def forgot_password(req: LoginRequest):
+    db = get_db_sync()
+    user = db.query(User).filter(User.email == req.email).first()
+    if not user:
+        db.close()
+        return {"message": "If the email exists, a reset link has been sent", "reset_token": None}
+    token = secrets.token_urlsafe(32)
+    user.reset_token = token
+    user.reset_token_expiry = datetime.now(timezone.utc) + timedelta(hours=1)
+    db.commit()
+    db.close()
+    return {"message": "Reset token generated", "reset_token": token}
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str
+
+
+@router.post("/reset-password")
+def reset_password(req: ResetPasswordRequest):
+    db = get_db_sync()
+    user = db.query(User).filter(User.reset_token == req.token).first()
+    if not user:
+        db.close()
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    if user.reset_token_expiry and user.reset_token_expiry < datetime.now(timezone.utc):
+        db.close()
+        raise HTTPException(status_code=400, detail="Reset token has expired")
+    user.password_hash = hash_password(req.new_password)
+    user.reset_token = None
+    user.reset_token_expiry = None
+    db.commit()
+    db.close()
+    return {"message": "Password reset successfully"}
 
 
 @router.post("/logout")

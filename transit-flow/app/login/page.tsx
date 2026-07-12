@@ -9,6 +9,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/lib/validations";
 import type { z } from "zod";
+import Link from "next/link";
 import { Truck, Shield } from "lucide-react";
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -111,15 +112,22 @@ export default function LoginPage() {
                 <Checkbox checked={rememberMe} onCheckedChange={(v) => setRememberMe(!!v)} />
                 Remember me
               </label>
-              <a href="#" className="text-xs text-orange-500 hover:underline">
+              <Link href="/forgot-password" className="text-xs text-orange-500 hover:underline">
                 Forgot password?
-              </a>
+              </Link>
             </div>
 
             <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? "Signing in&hellip;" : "Sign In"}
+              {isSubmitting ? "Signing;" : "Sign In"}
             </Button>
           </form>
+
+          <p className="text-center text-sm text-muted-foreground">
+            Don&apos;t have an account?{" "}
+            <Link href="/signup" className="text-orange-500 hover:underline">
+              Sign up
+            </Link>
+          </p>
 
           {/* Mobile-only role info */}
           <div className="pt-4 text-center text-xs text-muted-foreground lg:hidden">

@@ -37,6 +37,8 @@ def list_drivers(
     status: Optional[str] = None,
     licenseValid: Optional[bool] = None,
     region: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
 ):
     db = get_db_sync()
     q = db.query(Driver)
@@ -49,6 +51,17 @@ def list_drivers(
         q = q.filter(Driver.status == status)
     if region:
         q = q.filter(Driver.region == region)
+
+    sort_map = {
+        "name": Driver.name,
+        "licenseNo": Driver.licenseNo,
+        "licenseExpiry": Driver.licenseExpiry,
+        "safetyScore": Driver.safetyScore,
+        "status": Driver.status,
+    }
+    sort_col = sort_map.get(sort_by)
+    if sort_col:
+        q = q.order_by(sort_col.desc() if sort_order == "desc" else sort_col.asc())
 
     drivers = q.all()
 

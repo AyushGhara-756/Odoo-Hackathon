@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 from src.db import get_db_sync
-from src.models import FuelLog
+from src.models import FuelLog, Vehicle
 
 router = APIRouter(prefix="/fuel-logs", tags=["fuel-logs"])
 
@@ -27,9 +27,28 @@ def log_to_dict(f: FuelLog) -> dict:
 
 
 @router.get("")
-def list_fuel_logs(search: Optional[str] = None):
+def list_fuel_logs(
+    search: Optional[str] = None,
+    sort_by: Optional[str] = None,
+    sort_order: Optional[str] = "asc",
+):
     db = get_db_sync()
-    q = db.query(FuelLog).order_by(FuelLog.id.desc())
+    q = db.query(FuelLog)
+    if search:
+        q = q.outerjoin(Vehicle).filter(
+            FuelLog.date.ilike(f"%{search}%")
+            | Vehicle.name.ilike(f"%{search}%")
+        )
+    sort_map = {
+        "date": FuelLog.date,
+        "liters": FuelLog.liters,
+        "cost": FuelLog.cost,
+    }
+    sort_col = sort_map.get(sort_by)
+    if sort_col:
+        q = q.order_by(sort_col.desc() if sort_order == "desc" else sort_col.asc())
+    else:
+        q = q.order_by(FuelLog.id.desc())
     logs = q.all()
     for l in logs:
         _ = l.vehicle

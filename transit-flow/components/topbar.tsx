@@ -1,10 +1,9 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useRef } from "react";
 import { Search } from "lucide-react";
 import { Input } from "./ui/input";
-import { apiFetch } from "@/lib/api";
-import type { SessionUser } from "@/lib/types";
+import { useAuth } from "@/context/auth-context";
 
 export function TopBar({
   onSearch,
@@ -13,22 +12,8 @@ export function TopBar({
   onSearch?: (query: string) => void;
   searchPlaceholder?: string;
 }) {
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const { user } = useAuth();
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    apiFetch<SessionUser>("/auth/me")
-      .then((data) => {
-        if (!cancelled) setUser(data);
-      })
-      .catch(() => {
-        if (!cancelled) setUser(null);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
 
   function handleChange(value: string) {
     if (timerRef.current) clearTimeout(timerRef.current);

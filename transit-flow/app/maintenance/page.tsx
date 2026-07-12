@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/topbar";
 import { StatusBadge } from "@/components/status-badge";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Pagination } from "@/components/Pagination";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +52,9 @@ export default function MaintenancePage() {
   const [error, setError] = useState<string | null>(null);
 
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
+  const [vehicleSearch, setVehicleSearch] = useState("");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const {
     register,
@@ -122,33 +127,37 @@ export default function MaintenancePage() {
 
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Vehicle</label>
-              <Select value={watch("vehicleId")} onValueChange={(v) => setValue("vehicleId", v ?? "")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select vehicle" />
-                </SelectTrigger>
-                <SelectContent>
-                  {vehicles.map((v) => (
-                    <SelectItem key={v.id} value={v.id}>
-                      {v.regNo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="Search vehicle by reg no..."
+                value={vehicleSearch}
+                onChange={(e) => {
+                  setVehicleSearch(e.target.value);
+                  const match = vehicles.find((v) => v.regNo === e.target.value);
+                  setValue("vehicleId", match?.id ?? "");
+                }}
+                list="vehicle-list"
+              />
+              <datalist id="vehicle-list">
+                {vehicles.map((v) => (
+                  <option key={v.id} value={v.regNo} />
+                ))}
+              </datalist>
+              <input type="hidden" {...register("vehicleId")} />
               {errors.vehicleId && <p className="text-xs text-red-500">{errors.vehicleId.message}</p>}
             </div>
 
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Service Type</label>
-              <Select value={watch("serviceType")} onValueChange={(v) => setValue("serviceType", v ?? "")}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select service type" />
-                </SelectTrigger>
-                <SelectContent>
-                  {serviceTypes.map((st) => (
-                    <SelectItem key={st} value={st}>{st}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Input
+                placeholder="Type service type..."
+                list="service-types-list"
+                {...register("serviceType")}
+              />
+              <datalist id="service-types-list">
+                {serviceTypes.map((st) => (
+                  <option key={st} value={st} />
+                ))}
+              </datalist>
               {errors.serviceType && <p className="text-xs text-red-500">{errors.serviceType.message}</p>}
             </div>
 
@@ -214,8 +223,8 @@ export default function MaintenancePage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-muted-foreground">
-                    Loading…
+                  <TableCell colSpan={5}>
+                    <LoadingSpinner />
                   </TableCell>
                 </TableRow>
               ) : records.length === 0 ? (
@@ -225,7 +234,7 @@ export default function MaintenancePage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                records.map((r) => (
+                records.slice((page - 1) * pageSize, page * pageSize).map((r) => (
                   <TableRow key={r.id}>
                     <TableCell>{r.vehicleName}</TableCell>
                     <TableCell>{r.serviceType}</TableCell>
@@ -247,6 +256,12 @@ export default function MaintenancePage() {
               )}
             </TableBody>
           </Table>
+
+          <Pagination
+            currentPage={page}
+            totalPages={Math.max(1, Math.ceil(records.length / pageSize))}
+            onPageChange={setPage}
+          />
         </div>
       </div>
     </div>

@@ -11,7 +11,7 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="flex items-center gap-2 rounded-md p-2 hover:bg-accent"
+      className="flex items-center gap-2 rounded-md p-2 text-neutral-300 hover:bg-neutral-800"
     >
       {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
     </button>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/context/theme-context";
 import { AuthProvider } from "@/context/auth-context";
-import Navbar from "@/components/Navbar";
+import { AppShell } from "@/components/AppShell";
 
 const themeInitScript = `
 (function() {
@@ -33,10 +33,7 @@ export default function RootLayout({
       <body className="min-h-full">
         <ThemeProvider>
           <AuthProvider>
-            <div className="flex min-h-screen">
-              <Navbar />
-              <main className="flex-1 overflow-y-auto">{children}</main>
-            </div>
+            <AppShell>{children}</AppShell>
           </AuthProvider>
         </ThemeProvider>
       </body>

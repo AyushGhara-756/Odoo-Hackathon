@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { TopBar } from "@/components/topbar";
 import { StatusBadge } from "@/components/status-badge";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -33,6 +35,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { driverSchema } from "@/lib/validations";
 import type { z } from "zod";
+import { ArrowUp, ArrowDown } from "lucide-react";
 
 type DriverForm = z.infer<typeof driverSchema>;
 
@@ -53,6 +56,10 @@ export default function DriversPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [sortBy, setSortBy] = useState("");
+  const [sortOrder, setSortOrder] = useState("asc");
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const {
     register,
@@ -70,13 +77,34 @@ export default function DriversPage() {
   function fetchDrivers() {
     setLoading(true);
     setError(null);
-    apiFetch<Driver[]>("/drivers", { params: { search: search || undefined } })
+    apiFetch<Driver[]>("/drivers", {
+      params: {
+        search: search || undefined,
+        sort_by: sortBy || undefined,
+        sort_order: sortOrder,
+      },
+    })
       .then(setDrivers)
       .catch((err) => setError(err instanceof Error ? err.message : "Failed to load drivers"))
       .finally(() => setLoading(false));
   }
 
-  useEffect(fetchDrivers, [search]);
+  useEffect(fetchDrivers, [search, sortBy, sortOrder]);
+
+  function handleSort(column: string) {
+    if (sortBy === column) {
+      setSortOrder((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(column);
+      setSortOrder("asc");
+    }
+    setPage(1);
+  }
+
+  function SortIcon({ column }: { column: string }) {
+    if (sortBy !== column) return null;
+    return sortOrder === "asc" ? <ArrowUp className="inline h-3 w-3" /> : <ArrowDown className="inline h-3 w-3" />;
+  }
 
   const statusCounts = useMemo(() => {
     const counts: Record<DriverStatus, number> = {
@@ -166,23 +194,33 @@ export default function DriversPage() {
 
         <div className="rounded-md border border-border bg-card">
           <Table>
-            <TableHeader>
+              <TableHeader>
               <TableRow>
-                <TableHead>Driver</TableHead>
-                <TableHead>License No.</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("name")}>
+                  Driver <SortIcon column="name" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("licenseNo")}>
+                  License No. <SortIcon column="licenseNo" />
+                </TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead>Expiry</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("licenseExpiry")}>
+                  Expiry <SortIcon column="licenseExpiry" />
+                </TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Trip Compl.</TableHead>
-                <TableHead>Safety</TableHead>
-                <TableHead>Status</TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("safetyScore")}>
+                  Safety <SortIcon column="safetyScore" />
+                </TableHead>
+                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("status")}>
+                  Status <SortIcon column="status" />
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center text-muted-foreground">
-                    Loading...
+                  <TableCell colSpan={8}>
+                    <LoadingSpinner />
                   </TableCell>
                 </TableRow>
               ) : drivers.length === 0 ? (
@@ -192,7 +230,7 @@ export default function DriversPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                drivers.map((d) => (
+                drivers.slice((page - 1) * pageSize, page * pageSize).map((d) => (
                   <TableRow key={d.id}>
                     <TableCell>{d.name}</TableCell>
                     <TableCell className="font-mono text-xs">{d.licenseNo}</TableCell>
@@ -220,6 +258,12 @@ export default function DriversPage() {
             </div>
           ))}
         </div>
+
+        <Pagination
+          currentPage={page}
+          totalPages={Math.max(1, Math.ceil(drivers.length / pageSize))}
+          onPageChange={setPage}
+        />
 
         <p className="text-xs text-muted-foreground">
           Rule: expired license or suspended status blocks trip assignment.

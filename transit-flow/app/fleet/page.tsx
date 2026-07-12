@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/topbar";
 import { StatusBadge } from "@/components/status-badge";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
+import { Pagination } from "@/components/Pagination";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -64,6 +66,8 @@ export default function FleetPage() {
 
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [page, setPage] = useState(1);
+  const pageSize = 10;
 
   const {
     register,
@@ -186,7 +190,7 @@ export default function FleetPage() {
                   {errors.odometer && <p className="text-xs text-red-500">{errors.odometer.message}</p>}
                 </div>
                 <div className="space-y-1">
-                  <Input type="number" placeholder="Avg. Cost" {...register("avgCost")} />
+                  <Input type="number" step="0.01" placeholder="Avg. Cost" {...register("avgCost")} />
                   {errors.avgCost && <p className="text-xs text-red-500">{errors.avgCost.message}</p>}
                 </div>
                 <Button type="submit" className="w-full" disabled={isSubmitting}>
@@ -219,8 +223,8 @@ export default function FleetPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center text-muted-foreground">
-                    Loading...
+                  <TableCell colSpan={7}>
+                    <LoadingSpinner />
                   </TableCell>
                 </TableRow>
               ) : vehicles.length === 0 ? (
@@ -230,7 +234,7 @@ export default function FleetPage() {
                   </TableCell>
                 </TableRow>
               ) : (
-                vehicles.map((v) => (
+                vehicles.slice((page - 1) * pageSize, page * pageSize).map((v) => (
                   <TableRow key={v.id}>
                     <TableCell className="font-mono text-xs">{v.regNo}</TableCell>
                     <TableCell>{v.makeModel}</TableCell>
@@ -247,6 +251,12 @@ export default function FleetPage() {
             </TableBody>
           </Table>
         </div>
+
+        <Pagination
+          currentPage={page}
+          totalPages={Math.max(1, Math.ceil(vehicles.length / pageSize))}
+          onPageChange={setPage}
+        />
       </div>
     </div>
   );
