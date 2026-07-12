@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from typing import Optional
 from pydantic import BaseModel
+
+from src.analytics import analytics
 from src.dashboard import dashboard
 from src.drivers import drivers
 from src.trips import trips, create_trip, dispatch_trip, update_trip_status
@@ -121,3 +123,7 @@ def change_status(
         trip_id,
         status.status,
     )
+
+@app.get("/analytics")
+def get_analytics():
+    return analytics()
