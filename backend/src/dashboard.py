@@ -40,6 +40,12 @@ def dashboard(status=None, vehicle_type=None, region=None):
         "status",
         "eta"
     ]].tail(5).to_dict(orient="records")
+    for rec in recent_trips:
+        for k, v in rec.items():
+            if isinstance(v, float) and pd.isna(v):
+                rec[k] = None
+            elif isinstance(v, float) and v == int(v):
+                rec[k] = int(v)
 
     return {
         "activeVehicles": len(active_vehicles),
