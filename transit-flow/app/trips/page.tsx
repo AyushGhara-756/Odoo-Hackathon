@@ -80,9 +80,13 @@ export default function TripsPage() {
       await apiFetch("/trips", {
         method: "POST",
         body: JSON.stringify({
-          ...data,
+          source: data.source,
+          destination: data.destination,
+          vehicleId: Number(data.vehicleId),
+          driverId: Number(data.driverId),
           cargoWeightKg: Number(data.cargoWeightKg),
           plannedDistanceKm: Number(data.plannedDistanceKm),
+          region: "West",
         }),
       });
       reset(emptyForm);

@@ -19,6 +19,11 @@ interface AuthContextValue {
   logout: () => Promise<void>;
 }
 
+interface LoginResponse {
+  token: string;
+  user: SessionUser;
+}
+
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 const PUBLIC_ROUTES = ["/login"];
@@ -31,6 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (PUBLIC_ROUTES.includes(pathname)) {
+      setLoading(false);
+      return;
+    }
+    const token = localStorage.getItem("transitops_token");
+    if (!token) {
+      setUser(null);
+      setLoading(false);
+      router.replace("/login");
       return;
     }
     let cancelled = false;
@@ -40,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         if (!cancelled) {
+          localStorage.removeItem("transitops_token");
           setUser(null);
           router.replace("/login");
         }
@@ -52,10 +66,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const data = await apiFetch<{ user: SessionUser }>("/auth/login", {
+      const data = await apiFetch<LoginResponse>("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email, password }),
       });
+      localStorage.setItem("transitops_token", data.token);
       setUser(data.user);
       router.replace("/dashboard");
     },
@@ -64,6 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     await apiFetch("/auth/logout", { method: "POST" }).catch(() => {});
+    localStorage.removeItem("transitops_token");
     setUser(null);
     router.replace("/login");
   }, [router]);

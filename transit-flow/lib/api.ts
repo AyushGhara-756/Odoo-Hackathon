@@ -19,13 +19,19 @@ export async function apiFetch<T>(route: string, options: ApiOptions = {}): Prom
     });
   }
 
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    ...(init.headers as Record<string, string>),
+  };
+
+  const token = typeof window !== "undefined" ? localStorage.getItem("transitops_token") : null;
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
   const res = await fetch(url.toString(), {
     ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...init.headers,
-    },
-    credentials: "include",
+    headers,
   });
 
   if (!res.ok) {

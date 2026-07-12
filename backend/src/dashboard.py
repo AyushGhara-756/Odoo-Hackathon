@@ -1,84 +1,87 @@
-from pathlib import Path
+from fastapi import APIRouter
+from typing import Optional
+from sqlalchemy import func
 
-import pandas as pd
+from src.db import get_db_sync
+from src.modals import Vehicle, Driver, Trip
 
-DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 
 
-def dashboard(status=None, vehicle_type=None, region=None):
+def vehicle_status_breakdown(db) -> dict:
+    rows = (
+        db.query(Vehicle.status, func.count(Vehicle.id))
+        .group_by(Vehicle.status)
+        .all()
+    )
+    breakdown = {"Available": 0, "On Trip": 0, "In Shop": 0, "Retired": 0}
+    for status, count in rows:
+        breakdown[status] = count
+    return breakdown
 
-    vehicles = pd.read_json(DATA_DIR / "vehicles.json")
-    drivers = pd.read_json(DATA_DIR / "drivers.json")
-    trips = pd.read_json(DATA_DIR / "trips.json")
 
+@router.get("/summary")
+def dashboard_summary(
+    vehicleType: Optional[str] = None,
+    status: Optional[str] = None,
+    region: Optional[str] = None,
+):
+    db = get_db_sync()
+
+    vq = db.query(Vehicle)
+    dq = db.query(Driver)
+    tq = db.query(Trip)
+
+    if vehicleType:
+        vq = vq.filter(Vehicle.type == vehicleType)
     if status:
-        vehicles = vehicles[vehicles["status"] == status]
-
-    if vehicle_type:
-        vehicles = vehicles[vehicles["type"] == vehicle_type]
-
+        vq = vq.filter(Vehicle.status == status)
     if region:
-        vehicles = vehicles[vehicles["region"] == region]
-        drivers = drivers[drivers["region"] == region]
-        trips = trips[trips["region"] == region]
+        vq = vq.filter(Vehicle.region == region)
+        dq = dq.filter(Driver.region == region)
+        tq = tq.filter(Trip.region == region)
 
-    active_vehicles = vehicles[vehicles["status"] == "On Trip"]
-    available_vehicles = vehicles[vehicles["status"] == "Available"]
-    maintenance = vehicles[vehicles["status"] == "In Shop"]
+    vehicles = vq.all()
+    drivers = dq.all()
+    trips = tq.all()
 
-    active_trips = trips[trips["status"] == "Dispatched"]
-    pending_trips = trips[trips["status"] == "Draft"]
+    active_vehicles = sum(1 for v in vehicles if v.status == "On Trip")
+    available_vehicles = sum(1 for v in vehicles if v.status == "Available")
+    in_maintenance = sum(1 for v in vehicles if v.status == "In Shop")
+    active_trips = sum(1 for t in trips if t.status in ("Dispatched", "In Transit"))
+    pending_trips = sum(1 for t in trips if t.status == "Draft")
+    drivers_on_duty = sum(1 for d in drivers if d.status in ("Available", "On Trip"))
+    fleet_utilization = round(active_vehicles / len(vehicles) * 100, 2) if vehicles else 0
 
-    drivers_on_duty = drivers[
-        drivers["status"].isin(["Available", "On Trip"])
+    recent = (
+        db.query(Trip)
+        .order_by(Trip.id.desc())
+        .limit(5)
+        .all()
+    )
+    recent_trips = [
+        {
+            "id": t.tripId,
+            "vehicleName": t.vehicle.name if t.vehicle else "--",
+            "driverName": t.driver.name if t.driver else "--",
+            "status": t.status,
+            "eta": t.eta,
+        }
+        for t in recent
     ]
 
-    recent_trips = trips[[
-        "tripId",
-        "vehicle",
-        "driver",
-        "status",
-        "eta"
-    ]].tail(5).to_dict(orient="records")
-    for rec in recent_trips:
-        for k, v in rec.items():
-            if isinstance(v, float) and pd.isna(v):
-                rec[k] = None
-            elif isinstance(v, float) and v == int(v):
-                rec[k] = int(v)
+    breakdown = vehicle_status_breakdown(db)
+
+    db.close()
 
     return {
-        "activeVehicles": len(active_vehicles),
-        "availableVehicles": len(available_vehicles),
-        "vehiclesInMaintenance": len(maintenance),
-        "activeTrips": len(active_trips),
-        "pendingTrips": len(pending_trips),
-        "driversOnDuty": len(drivers_on_duty),
-        "fleetUtilization": round(
-            len(active_vehicles) / len(vehicles) * 100,
-            2
-        ) if len(vehicles) else 0,
-
-        "recentTrips": recent_trips
+        "activeVehicles": active_vehicles,
+        "availableVehicles": available_vehicles,
+        "vehiclesInMaintenance": in_maintenance,
+        "activeTrips": active_trips,
+        "pendingTrips": pending_trips,
+        "driversOnDuty": drivers_on_duty,
+        "fleetUtilizationPct": fleet_utilization,
+        "vehicleStatusBreakdown": breakdown,
+        "recentTrips": recent_trips,
     }
-
-if __name__ == "__main__":
-
-    print("No Filters:")
-    print(dashboard())
-
-    print("\nStatus = Available")
-    print(dashboard(status="Available"))
-
-    print("\nVehicle Type = Van")
-    print(dashboard(vehicle_type="Van"))
-
-    print("\nRegion = West")
-    print(dashboard(region="West"))
-
-    print("\nStatus = Available, Type = Van, Region = West")
-    print(dashboard(
-        status="Available",
-        vehicle_type="Van",
-        region="West"
-    ))
