@@ -100,5 +100,39 @@
         "status": "Completed",
         "eta": "Awaiting Dispatch",
         "region": "North"
+    },
+    {
+        "tripId": "TR007",
+        "source": "Delhi",
+        "destination": "Jaipur",
+        "vehicle": "VAN-05",
+        "driver": "Alex",
+        "cargoWeight": 700,
+        "plannedDistance": 280,
+        "actualDistance": null,
+        "fuelConsumed": null,
+        "startOdometer": null,
+        "endOdometer": null,
+        "revenue": 0,
+        "status": "Completed",
+        "eta": "Awaiting Dispatch",
+        "region": "North"
+    },
+    {
+        "tripId": "TR008",
+        "source": "Delhi",
+        "destination": "Jaipur",
+        "vehicle": "VAN-05",
+        "driver": "Alex",
+        "cargoWeight": 700,
+        "plannedDistance": 280,
+        "actualDistance": null,
+        "fuelConsumed": null,
+        "startOdometer": null,
+        "endOdometer": null,
+        "revenue": 0,
+        "status": "Completed",
+        "eta": "Awaiting Dispatch",
+        "region": "North"
     }
 ]

@@ -1,9 +1,13 @@
+from pathlib import Path
+
 import pandas as pd
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
 
 
 def drivers(status=None, license_category=None, region=None):
 
-    drivers_data = pd.read_json("../data/drivers.json")
+    drivers_data = pd.read_json(DATA_DIR / "drivers.json")
 
     if status:
         drivers_data = drivers_data[drivers_data["status"] == status]

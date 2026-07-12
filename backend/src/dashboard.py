@@ -1,10 +1,15 @@
+from pathlib import Path
+
 import pandas as pd
+
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+
 
 def dashboard(status=None, vehicle_type=None, region=None):
 
-    vehicles = pd.read_json("../data/vehicles.json")
-    drivers = pd.read_json("../data/drivers.json")
-    trips = pd.read_json("../data/trips.json")
+    vehicles = pd.read_json(DATA_DIR / "vehicles.json")
+    drivers = pd.read_json(DATA_DIR / "drivers.json")
+    trips = pd.read_json(DATA_DIR / "trips.json")
 
     if status:
         vehicles = vehicles[vehicles["status"] == status]

@@ -1,9 +1,12 @@
 import json
 import os
+from pathlib import Path
+
 import pandas as pd
 
-TRIPS_FILE = "../data/trips.json"
-VEHICLES_FILE = "../data/vehicles.json"
+DATA_DIR = Path(__file__).resolve().parent.parent / "data"
+TRIPS_FILE = DATA_DIR / "trips.json"
+VEHICLES_FILE = DATA_DIR / "vehicles.json"
 
 VALID_STATUSES = {"Draft", "Dispatched", "In Transit", "Completed", "Cancelled"}
 
@@ -18,7 +21,14 @@ def trips(status=None, region=None):
         trips_data = trips_data[trips_data["status"] == status]
     if region:
         trips_data = trips_data[trips_data["region"] == region]
-    return trips_data.to_dict(orient="records")
+    records = trips_data.to_dict(orient="records")
+    for rec in records:
+        for k, v in rec.items():
+            if isinstance(v, float) and pd.isna(v):
+                rec[k] = None
+            elif isinstance(v, float) and v == int(v):
+                rec[k] = int(v)
+    return records
 
 
 def create_trip(
