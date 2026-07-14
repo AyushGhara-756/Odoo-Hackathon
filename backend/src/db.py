@@ -1,7 +1,7 @@
 from urllib.parse import quote_plus
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker, Session
 import os
 import re
@@ -32,6 +32,14 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 def init_db():
     from src.models import Base
     Base.metadata.create_all(bind=engine)
+    # Migrate existing tables: add missing columns
+    with engine.connect() as conn:
+        conn.execute(text("""
+            ALTER TABLE users
+            ADD COLUMN IF NOT EXISTS reset_token VARCHAR(200),
+            ADD COLUMN IF NOT EXISTS reset_token_expiry TIMESTAMPTZ
+        """))
+        conn.commit()
 
 
 def get_db():
