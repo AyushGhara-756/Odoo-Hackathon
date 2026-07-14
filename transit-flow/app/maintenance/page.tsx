@@ -52,7 +52,6 @@ export default function MaintenancePage() {
   const [error, setError] = useState<string | null>(null);
 
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
-  const [vehicleSearch, setVehicleSearch] = useState("");
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
@@ -127,22 +126,18 @@ export default function MaintenancePage() {
 
             <div className="space-y-1">
               <label className="text-xs text-muted-foreground">Vehicle</label>
-              <Input
-                placeholder="Search vehicle by reg no..."
-                value={vehicleSearch}
-                onChange={(e) => {
-                  setVehicleSearch(e.target.value);
-                  const match = vehicles.find((v) => v.regNo === e.target.value);
-                  setValue("vehicleId", match?.id ?? "");
-                }}
-                list="vehicle-list"
-              />
-              <datalist id="vehicle-list">
-                {vehicles.map((v) => (
-                  <option key={v.id} value={v.regNo} />
-                ))}
-              </datalist>
-              <input type="hidden" {...register("vehicleId")} />
+              <Select value={watch("vehicleId")} onValueChange={(v) => setValue("vehicleId", v ?? "")}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select vehicle" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vehicles.map((v) => (
+                    <SelectItem key={v.id} value={v.id}>
+                      {v.regNo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {errors.vehicleId && <p className="text-xs text-red-500">{errors.vehicleId.message}</p>}
             </div>
 

@@ -64,7 +64,7 @@ export default function Navbar() {
         <div className="flex h-screen w-56 flex-col justify-between border-r border-neutral-800 bg-neutral-950 py-4">
             <div>
                 <div className="px-4 pb-6 flex flex-col gap-1">
-                    <h1 className="text-lg text-white">TransitOps</h1>
+                    <Link href={"/dashboard"} className="text-lg text-white">TransitOps</Link>
                     <ThemeToggle />
                 </div>
                 <NavigationMenu>

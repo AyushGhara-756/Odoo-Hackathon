@@ -26,7 +26,7 @@ interface LoginResponse {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const PUBLIC_ROUTES = ["/login"];
+const PUBLIC_ROUTES = ["/", "/login", "/signup", "/forgot-password", "/reset-password"];
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);

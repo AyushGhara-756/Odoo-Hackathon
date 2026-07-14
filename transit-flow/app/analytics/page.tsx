@@ -6,42 +6,13 @@ import { Button } from "@/components/ui/button";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { apiFetch } from "@/lib/api";
 import type { AnalyticsKPIs, CostliestVehicle, MonthlyRevenuePoint } from "@/lib/types";
-import { Download, Database } from "lucide-react";
-
-const DUMMY_KPIS: AnalyticsKPIs = {
-  fuelEfficiencyKmPerL: 6.8,
-  fleetUtilizationPct: 72.5,
-  operationalCost: 284500,
-  vehicleRoiPct: 18.3,
-};
-
-const DUMMY_MONTHLY_REVENUE: MonthlyRevenuePoint[] = [
-  { month: "Jan", revenue: 180000 },
-  { month: "Feb", revenue: 210000 },
-  { month: "Mar", revenue: 195000 },
-  { month: "Apr", revenue: 240000 },
-  { month: "May", revenue: 225000 },
-  { month: "Jun", revenue: 260000 },
-  { month: "Jul", revenue: 310000 },
-  { month: "Aug", revenue: 290000 },
-  { month: "Sep", revenue: 275000 },
-  { month: "Oct", revenue: 320000 },
-  { month: "Nov", revenue: 345000 },
-  { month: "Dec", revenue: 380000 },
-];
-
-const DUMMY_COSTLIEST: CostliestVehicle[] = [
-  { vehicleName: "Truck-11", cost: 84500 },
-  { vehicleName: "Van-09", cost: 62300 },
-  { vehicleName: "MH-01-TR", cost: 51000 },
-];
+import { Download } from "lucide-react";
 
 export default function AnalyticsPage() {
-  const [kpis, setKpis] = useState<AnalyticsKPIs>(DUMMY_KPIS);
-  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenuePoint[]>(DUMMY_MONTHLY_REVENUE);
-  const [topCostliest, setTopCostliest] = useState<CostliestVehicle[]>(DUMMY_COSTLIEST);
+  const [kpis, setKpis] = useState<AnalyticsKPIs | null>(null);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<MonthlyRevenuePoint[]>([]);
+  const [topCostliest, setTopCostliest] = useState<CostliestVehicle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [usingDummy, setUsingDummy] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -53,13 +24,9 @@ export default function AnalyticsPage() {
       apiFetch<CostliestVehicle[]>("/analytics/top-costliest-vehicles", { signal: controller.signal }),
     ])
       .then(([k, mr, tc]) => {
-        const hasData = mr.length > 0 || tc.length > 0 || k.operationalCost > 0;
-        if (hasData) {
-          setKpis(k);
-          setMonthlyRevenue(mr);
-          setTopCostliest(tc);
-          setUsingDummy(false);
-        }
+        setKpis(k);
+        setMonthlyRevenue(mr);
+        setTopCostliest(tc);
       })
       .catch(() => {})
       .finally(() => {
@@ -76,18 +43,19 @@ export default function AnalyticsPage() {
   const maxCost = Math.max(...topCostliest.map((v) => v.cost), 1);
 
   const handleExportCSV = useCallback(() => {
-    const rows = [
+    if (!kpis) return;
+    const rows: string[][] = [
       ["Metric", "Value"],
-      ["Fuel Efficiency (km/l)", kpis?.fuelEfficiencyKmPerL ?? ""],
-      ["Fleet Utilization (%)", kpis?.fleetUtilizationPct ?? ""],
-      ["Operational Cost", kpis?.operationalCost ?? ""],
-      ["Vehicle ROI (%)", kpis?.vehicleRoiPct ?? ""],
+      ["Fuel Efficiency (km/l)", String(kpis.fuelEfficiencyKmPerL)],
+      ["Fleet Utilization (%)", String(kpis.fleetUtilizationPct)],
+      ["Operational Cost", String(kpis.operationalCost)],
+      ["Vehicle ROI (%)", String(kpis.vehicleRoiPct)],
       [],
       ["Month", "Revenue"],
-      ...monthlyRevenue.map((m) => [m.month, m.revenue]),
+      ...monthlyRevenue.map((m) => [m.month, String(m.revenue)]),
       [],
       ["Vehicle", "Cost"],
-      ...topCostliest.map((v) => [v.vehicleName, v.cost]),
+      ...topCostliest.map((v) => [v.vehicleName, String(v.cost)]),
     ];
 
     const csv = rows.map((row) => row.join(",")).join("\n");
@@ -118,7 +86,7 @@ export default function AnalyticsPage() {
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="h-20 animate-pulse rounded-md border border-border bg-card" />
             ))
-          ) : (
+          ) : kpis ? (
             <>
               <div className="rounded-md border border-border bg-card p-4">
                 <p className="text-xs text-muted-foreground">Fuel Efficiency</p>
@@ -143,6 +111,10 @@ export default function AnalyticsPage() {
                 <p className="mt-1 text-2xl font-semibold text-foreground">{kpis.vehicleRoiPct}%</p>
               </div>
             </>
+          ) : (
+            <div className="col-span-full text-center text-sm text-muted-foreground py-8">
+              No analytics data available
+            </div>
           )}
         </div>
 
@@ -156,7 +128,7 @@ export default function AnalyticsPage() {
             <h3 className="mb-4 text-sm font-medium text-foreground">Monthly Revenue</h3>
             {loading ? (
               <div className="h-48 animate-pulse rounded-md bg-muted" />
-            ) : (
+            ) : monthlyRevenue.length > 0 ? (
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={monthlyRevenue}>
                   <XAxis dataKey="month" stroke="var(--muted-foreground)" fontSize={12} />
@@ -171,6 +143,8 @@ export default function AnalyticsPage() {
                   <Bar dataKey="revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">No revenue data</p>
             )}
           </div>
 
@@ -179,7 +153,7 @@ export default function AnalyticsPage() {
             <h3 className="mb-4 text-sm font-medium text-foreground">Top Costliest Vehicles</h3>
             {loading ? (
               <div className="h-48 animate-pulse rounded-md bg-muted" />
-            ) : (
+            ) : topCostliest.length > 0 ? (
               <div className="space-y-3">
                 {topCostliest.map((v) => (
                   <div key={v.vehicleName} className="flex items-center gap-3">
@@ -196,6 +170,8 @@ export default function AnalyticsPage() {
                   </div>
                 ))}
               </div>
+            ) : (
+              <p className="text-sm text-muted-foreground py-8 text-center">No cost data</p>
             )}
           </div>
         </div>

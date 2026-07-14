@@ -20,7 +20,11 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
 const STORAGE_KEY = "transitops-theme";
-const DEFAULT_THEME: Theme = "light";
+
+function getSystemTheme(): Theme {
+  if (typeof window === "undefined") return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
 
 function applyThemeClass(theme: Theme) {
   const root = document.documentElement;
@@ -32,18 +36,30 @@ function applyThemeClass(theme: Theme) {
 }
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  // Initialize from localStorage synchronously on client to avoid a flash;
-  // the inline script in layout.tsx (see below) sets the class before hydration,
-  // this just keeps React state in sync with it.
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === "undefined") return DEFAULT_THEME;
+    if (typeof window === "undefined") return "light";
     const stored = window.localStorage.getItem(STORAGE_KEY) as Theme | null;
-    return stored === "dark" || stored === "light" ? stored : DEFAULT_THEME;
+    if (stored === "dark" || stored === "light") return stored;
+    return getSystemTheme();
   });
 
   useEffect(() => {
     applyThemeClass(theme);
   }, [theme]);
+
+  // Listen for system theme changes when no explicit override is stored
+  useEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (stored === "dark" || stored === "light") return;
+
+    const mq = window.matchMedia("(prefers-color-scheme: dark)");
+    const handler = (e: MediaQueryListEvent) => {
+      const next: Theme = e.matches ? "dark" : "light";
+      setThemeState(next);
+    };
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const setTheme = useCallback((next: Theme) => {
     setThemeState(next);

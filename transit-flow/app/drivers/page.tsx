@@ -75,6 +75,7 @@ export default function DriversPage() {
   });
 
   function fetchDrivers() {
+    setPage(1);
     setLoading(true);
     setError(null);
     apiFetch<Driver[]>("/drivers", {
@@ -196,22 +197,22 @@ export default function DriversPage() {
           <Table>
               <TableHeader>
               <TableRow>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("name")}>
+                <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleSort("name")} onKeyDown={(e) => e.key === "Enter" && handleSort("name")}>
                   Driver <SortIcon column="name" />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("licenseNo")}>
+                <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleSort("licenseNo")} onKeyDown={(e) => e.key === "Enter" && handleSort("licenseNo")}>
                   License No. <SortIcon column="licenseNo" />
                 </TableHead>
                 <TableHead>Category</TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("licenseExpiry")}>
+                <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleSort("licenseExpiry")} onKeyDown={(e) => e.key === "Enter" && handleSort("licenseExpiry")}>
                   Expiry <SortIcon column="licenseExpiry" />
                 </TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead>Trip Compl.</TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("safetyScore")}>
+                <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleSort("safetyScore")} onKeyDown={(e) => e.key === "Enter" && handleSort("safetyScore")}>
                   Safety <SortIcon column="safetyScore" />
                 </TableHead>
-                <TableHead className="cursor-pointer select-none" onClick={() => handleSort("status")}>
+                <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleSort("status")} onKeyDown={(e) => e.key === "Enter" && handleSort("status")}>
                   Status <SortIcon column="status" />
                 </TableHead>
               </TableRow>

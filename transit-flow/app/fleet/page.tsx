@@ -82,6 +82,7 @@ export default function FleetPage() {
   });
 
   useEffect(() => {
+    setPage(1);
     let cancelled = false;
     apiFetch<Vehicle[]>("/vehicles", { params: { search, type: type || undefined, status: status || undefined } })
       .then((data) => { if (!cancelled) setVehicles(data); })

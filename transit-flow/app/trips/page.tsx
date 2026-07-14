@@ -86,7 +86,6 @@ export default function TripsPage() {
           driverId: Number(data.driverId),
           cargoWeightKg: Number(data.cargoWeightKg),
           plannedDistanceKm: Number(data.plannedDistanceKm),
-          region: "West",
         }),
       });
       reset(emptyForm);

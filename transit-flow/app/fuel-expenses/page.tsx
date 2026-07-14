@@ -85,6 +85,8 @@ export default function FuelExpensesPage() {
   });
 
   function fetchAll() {
+    setFuelPage(1);
+    setExpensePage(1);
     setLoading(true);
     setError(null);
     Promise.all([
@@ -185,143 +187,142 @@ export default function FuelExpensesPage() {
           </div>
         )}
 
-        <div className="flex flex-row gap-0.5">
-          <div className="flex justify-end gap-2">
-            <Dialog open={fuelDialogOpen} onOpenChange={setFuelDialogOpen}>
-              <DialogTrigger render={<Button />}>
-                + Log Fuel
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Log Fuel</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={fuelForm.handleSubmit(handleLogFuel)} className="space-y-3">
-                  {fuelForm.formState.errors.root && (
-                    <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-500">
-                      {fuelForm.formState.errors.root.message}
-                    </div>
+        <div className="flex justify-end gap-2">
+          <Dialog open={fuelDialogOpen} onOpenChange={setFuelDialogOpen}>
+            <DialogTrigger render={<Button />}>
+              + Log Fuel
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Log Fuel</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={fuelForm.handleSubmit(handleLogFuel)} className="space-y-3">
+                {fuelForm.formState.errors.root && (
+                  <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-500">
+                    {fuelForm.formState.errors.root.message}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Vehicle</label>
+                  <Select
+                    value={fuelForm.watch("vehicleId")}
+                    onValueChange={(v) => fuelForm.setValue("vehicleId", v ?? "")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select vehicle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vehicles.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.regNo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {fuelForm.formState.errors.vehicleId && (
+                    <p className="text-xs text-red-500">{fuelForm.formState.errors.vehicleId.message}</p>
                   )}
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Vehicle</label>
-                    <Select
-                      value={fuelForm.watch("vehicleId")}
-                      onValueChange={(v) => fuelForm.setValue("vehicleId", v ?? "")}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select vehicle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicles.map((v) => (
-                          <SelectItem key={v.id} value={v.id}>
-                            {v.regNo}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {fuelForm.formState.errors.vehicleId && (
-                      <p className="text-xs text-red-500">{fuelForm.formState.errors.vehicleId.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Date</label>
-                    <Input type="date" {...fuelForm.register("date")} />
-                    {fuelForm.formState.errors.date && (
-                      <p className="text-xs text-red-500">{fuelForm.formState.errors.date.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Liters</label>
-                    <Input type="number" {...fuelForm.register("liters")} />
-                    {fuelForm.formState.errors.liters && (
-                      <p className="text-xs text-red-500">{fuelForm.formState.errors.liters.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Cost</label>
-                    <Input type="number" {...fuelForm.register("cost")} />
-                    {fuelForm.formState.errors.cost && (
-                      <p className="text-xs text-red-500">{fuelForm.formState.errors.cost.message}</p>
-                    )}
-                  </div>
-                  <Button type="submit" className="w-full" disabled={fuelForm.formState.isSubmitting}>
-                    Save
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Date</label>
+                  <Input type="date" {...fuelForm.register("date")} />
+                  {fuelForm.formState.errors.date && (
+                    <p className="text-xs text-red-500">{fuelForm.formState.errors.date.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Liters</label>
+                  <Input type="number" {...fuelForm.register("liters")} />
+                  {fuelForm.formState.errors.liters && (
+                    <p className="text-xs text-red-500">{fuelForm.formState.errors.liters.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Cost</label>
+                  <Input type="number" {...fuelForm.register("cost")} />
+                  {fuelForm.formState.errors.cost && (
+                    <p className="text-xs text-red-500">{fuelForm.formState.errors.cost.message}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={fuelForm.formState.isSubmitting}>
+                  Save
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
 
-            <Dialog open={expenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
-              <DialogTrigger render={<Button variant="outline" />}>
-                + Add Expense
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add Expense</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={expenseForm.handleSubmit(handleAddExpense)} className="space-y-3">
-                  {expenseForm.formState.errors.root && (
-                    <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-500">
-                      {expenseForm.formState.errors.root.message}
-                    </div>
+          <Dialog open={expenseDialogOpen} onOpenChange={setExpenseDialogOpen}>
+            <DialogTrigger render={<Button variant="outline" />}>
+              + Add Expense
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add Expense</DialogTitle>
+              </DialogHeader>
+              <form onSubmit={expenseForm.handleSubmit(handleAddExpense)} className="space-y-3">
+                {expenseForm.formState.errors.root && (
+                  <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-500">
+                    {expenseForm.formState.errors.root.message}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Trip</label>
+                  <Input placeholder="Trip ID" {...expenseForm.register("tripId")} />
+                  {expenseForm.formState.errors.tripId && (
+                    <p className="text-xs text-red-500">{expenseForm.formState.errors.tripId.message}</p>
                   )}
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Trip</label>
-                    <Input placeholder="Trip ID" {...expenseForm.register("tripId")} />
-                    {expenseForm.formState.errors.tripId && (
-                      <p className="text-xs text-red-500">{expenseForm.formState.errors.tripId.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Vehicle</label>
-                    <Select
-                      value={expenseForm.watch("vehicleId")}
-                      onValueChange={(v) => expenseForm.setValue("vehicleId", v ?? "")}
-                    >
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Select vehicle" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {vehicles.map((v) => (
-                          <SelectItem key={v.id} value={v.id}>
-                            {v.regNo}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    {expenseForm.formState.errors.vehicleId && (
-                      <p className="text-xs text-red-500">{expenseForm.formState.errors.vehicleId.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Toll</label>
-                    <Input type="number" {...expenseForm.register("toll")} />
-                    {expenseForm.formState.errors.toll && (
-                      <p className="text-xs text-red-500">{expenseForm.formState.errors.toll.message}</p>
-                    )}
-                  </div>
-                  <div className="space-y-1">
-                    <label className="text-xs text-muted-foreground">Other</label>
-                    <Input type="number" {...expenseForm.register("other")} />
-                    {expenseForm.formState.errors.other && (
-                      <p className="text-xs text-red-500">{expenseForm.formState.errors.other.message}</p>
-                    )}
-                  </div>
-                  <Button type="submit" className="w-full" disabled={expenseForm.formState.isSubmitting}>
-                    Save
-                  </Button>
-                </form>
-              </DialogContent>
-            </Dialog>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Vehicle</label>
+                  <Select
+                    value={expenseForm.watch("vehicleId")}
+                    onValueChange={(v) => expenseForm.setValue("vehicleId", v ?? "")}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select vehicle" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {vehicles.map((v) => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.regNo}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {expenseForm.formState.errors.vehicleId && (
+                    <p className="text-xs text-red-500">{expenseForm.formState.errors.vehicleId.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Toll</label>
+                  <Input type="number" {...expenseForm.register("toll")} />
+                  {expenseForm.formState.errors.toll && (
+                    <p className="text-xs text-red-500">{expenseForm.formState.errors.toll.message}</p>
+                  )}
+                </div>
+                <div className="space-y-1">
+                  <label className="text-xs text-muted-foreground">Other</label>
+                  <Input type="number" {...expenseForm.register("other")} />
+                  {expenseForm.formState.errors.other && (
+                    <p className="text-xs text-red-500">{expenseForm.formState.errors.other.message}</p>
+                  )}
+                </div>
+                <Button type="submit" className="w-full" disabled={expenseForm.formState.isSubmitting}>
+                  Save
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
+
+        {error && (
+          <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+            {error}
           </div>
+        )}
 
-          {error && (
-            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
-              {error}
-            </div>
-          )}
-
-          {/* Fuel logs */}
-          <div className="rounded-md border border-border bg-card">
+        {/* Fuel logs */}
+        <div className="rounded-md border border-border bg-card">
             <div className="border-b border-border px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Fuel Logs</h3>
             </div>
@@ -329,13 +330,13 @@ export default function FuelExpensesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Vehicle</TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleFuelSort("date")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleFuelSort("date")} onKeyDown={(e) => e.key === "Enter" && handleFuelSort("date")}>
                     Date <SortIcon column="date" sortBy={fuelSortBy} sortOrder={fuelSortOrder} />
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleFuelSort("liters")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleFuelSort("liters")} onKeyDown={(e) => e.key === "Enter" && handleFuelSort("liters")}>
                     Liters <SortIcon column="liters" sortBy={fuelSortBy} sortOrder={fuelSortOrder} />
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleFuelSort("cost")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleFuelSort("cost")} onKeyDown={(e) => e.key === "Enter" && handleFuelSort("cost")}>
                     Cost <SortIcon column="cost" sortBy={fuelSortBy} sortOrder={fuelSortOrder} />
                   </TableHead>
                 </TableRow>
@@ -380,17 +381,17 @@ export default function FuelExpensesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleExpenseSort("tripId")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleExpenseSort("tripId")} onKeyDown={(e) => e.key === "Enter" && handleExpenseSort("tripId")}>
                     Trip <SortIcon column="tripId" sortBy={expenseSortBy} sortOrder={expenseSortOrder} />
                   </TableHead>
                   <TableHead>Vehicle</TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleExpenseSort("toll")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleExpenseSort("toll")} onKeyDown={(e) => e.key === "Enter" && handleExpenseSort("toll")}>
                     Toll <SortIcon column="toll" sortBy={expenseSortBy} sortOrder={expenseSortOrder} />
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleExpenseSort("other")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleExpenseSort("other")} onKeyDown={(e) => e.key === "Enter" && handleExpenseSort("other")}>
                     Other <SortIcon column="other" sortBy={expenseSortBy} sortOrder={expenseSortOrder} />
                   </TableHead>
-                  <TableHead className="cursor-pointer select-none" onClick={() => handleExpenseSort("maintenanceLinked")}>
+                  <TableHead className="cursor-pointer select-none" role="button" tabIndex={0} onClick={() => handleExpenseSort("maintenanceLinked")} onKeyDown={(e) => e.key === "Enter" && handleExpenseSort("maintenanceLinked")}>
                     Maint. <SortIcon column="maintenanceLinked" sortBy={expenseSortBy} sortOrder={expenseSortOrder} />
                   </TableHead>
                   <TableHead>Total</TableHead>
@@ -432,7 +433,6 @@ export default function FuelExpensesPage() {
               totalPages={Math.max(1, Math.ceil(expenses.length / pageSize))}
               onPageChange={setExpensePage}
             />
-          </div>
         </div>
       </div>
     </div>

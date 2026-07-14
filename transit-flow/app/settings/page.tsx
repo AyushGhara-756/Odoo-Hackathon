@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/topbar";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -165,8 +166,8 @@ export default function SettingsPage() {
             <TableBody>
               {loading ? (
                 <TableRow>
-                  <TableCell colSpan={MODULES.length + 1} className="text-center text-muted-foreground">
-                    Loading…
+                  <TableCell colSpan={MODULES.length + 1}>
+                    <LoadingSpinner />
                   </TableCell>
                 </TableRow>
               ) : (
