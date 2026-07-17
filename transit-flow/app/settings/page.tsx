@@ -149,8 +149,8 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* RBAC matrix */}
-        <div className="rounded-md border border-border bg-card">
+        {/* RBAC matrix (desktop) */}
+        <div className="hidden rounded-md border border-border bg-card md:block">
           <div className="border-b border-border px-4 py-3">
             <h3 className="text-sm font-medium text-foreground">Role-Based Access (RBAC)</h3>
           </div>
@@ -182,6 +182,29 @@ export default function SettingsPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* RBAC matrix (mobile) */}
+        <div className="space-y-3 md:hidden">
+          <h3 className="text-sm font-medium text-foreground">Role-Based Access (RBAC)</h3>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-16 animate-pulse rounded-md border border-border bg-card" />
+            ))
+          ) : (
+            rbacMatrix.map((row) => (
+              <div key={row.role} className="rounded-md border border-border bg-card p-4">
+                <p className="text-sm font-medium text-foreground">{row.role}</p>
+                <div className="mt-1 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  {MODULES.map((m) => (
+                    <span key={m.key}>
+                      {m.label}: {PERMISSION_SYMBOL[row[m.key]]}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>

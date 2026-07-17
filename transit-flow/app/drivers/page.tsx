@@ -193,7 +193,8 @@ export default function DriversPage() {
           </div>
         )}
 
-        <div className="rounded-md border border-border bg-card">
+        {/* Desktop table */}
+        <div className="hidden rounded-md border border-border bg-card md:block">
           <Table>
               <TableHeader>
               <TableRow>
@@ -248,6 +249,38 @@ export default function DriversPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="space-y-3 md:hidden">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-24 animate-pulse rounded-md border border-border bg-card" />
+            ))
+          ) : drivers.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No drivers found</p>
+          ) : (
+            drivers.slice((page - 1) * pageSize, page * pageSize).map((d) => (
+              <div key={d.id} className="rounded-md border border-border bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">{d.name}</span>
+                  <StatusBadge status={d.status} />
+                </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span className="font-mono">{d.licenseNo}</span>
+                  <span>{d.category}</span>
+                </div>
+                <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>Exp: {d.licenseExpiry}</span>
+                  <span>{d.contact}</span>
+                </div>
+                <div className="mt-0.5 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>Safety: {d.safetyScorePct}%</span>
+                  <span>Trips: {d.tripCompletionPct}%</span>
+                </div>
+              </div>
+            ))
+          )}
         </div>
 
         {/* Status totals strip */}

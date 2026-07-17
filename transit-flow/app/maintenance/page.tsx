@@ -53,6 +53,7 @@ export default function MaintenancePage() {
 
   const [serviceTypes, setServiceTypes] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
   const pageSize = 10;
 
   const {
@@ -116,7 +117,16 @@ export default function MaintenancePage() {
       <div className="p-6 grid gap-6 lg:grid-cols-2">
         {/* Log service record form */}
         <div className="rounded-md border border-border bg-card p-4">
-          <h3 className="mb-4 text-sm font-medium text-foreground">Log Service Record</h3>
+          <button
+            onClick={() => setShowForm((prev) => !prev)}
+            className="mb-4 flex w-full items-center justify-between text-sm font-medium text-foreground md:cursor-default md:pointer-events-none"
+          >
+            <span>Log Service Record</span>
+            <span className="text-xs text-muted-foreground md:hidden">
+              {showForm ? "Hide" : "Show"}
+            </span>
+          </button>
+          <div className={showForm ? "block" : "hidden md:block"}>
           <form onSubmit={handleSubmit(onSave)} className="space-y-3">
             {errors.root && (
               <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-500">
@@ -188,6 +198,7 @@ export default function MaintenancePage() {
               {isSubmitting ? "Saving…" : "Save"}
             </Button>
           </form>
+            </div>
 
           <div className="mt-6 text-xs text-muted-foreground space-y-1">
             <p>Available ⇄ In Shop</p>
@@ -195,8 +206,8 @@ export default function MaintenancePage() {
           </div>
         </div>
 
-        {/* Service log table */}
-        <div className="rounded-md border border-border bg-card">
+        {/* Service log table (desktop) */}
+        <div className="hidden rounded-md border border-border bg-card md:block">
           <div className="border-b border-border px-4 py-3">
             <h3 className="text-sm font-medium text-foreground">Service Log</h3>
           </div>
@@ -258,6 +269,48 @@ export default function MaintenancePage() {
             onPageChange={setPage}
           />
         </div>
+
+        {/* Mobile cards */}
+        <div className="space-y-3 md:hidden">
+          <h3 className="text-sm font-medium text-foreground">Service Log</h3>
+          {error && (
+            <div className="rounded-md border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
+              {error}
+            </div>
+          )}
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-20 animate-pulse rounded-md border border-border bg-card" />
+            ))
+          ) : records.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No service records</p>
+          ) : (
+            records.slice((page - 1) * pageSize, page * pageSize).map((r) => (
+              <div key={r.id} className="rounded-md border border-border bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">{r.vehicleName}</span>
+                  <StatusBadge status={r.status} />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{r.serviceType}</p>
+                <div className="mt-1 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">₹{r.cost.toLocaleString()}</span>
+                  {(r.status === "In Shop" || r.status === "Scheduled") && (
+                    <Button size="sm" variant="outline" onClick={() => handleCloseMaintenance(r.id)}>
+                      Close
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+          <Pagination
+            currentPage={page}
+            totalPages={Math.max(1, Math.ceil(records.length / pageSize))}
+            onPageChange={setPage}
+          />
+        </div>
+
+
       </div>
     </div>
   );

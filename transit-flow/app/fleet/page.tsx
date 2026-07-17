@@ -129,10 +129,10 @@ export default function FleetPage() {
       <TopBar onSearch={setSearch} searchPlaceholder="Search vehicles..." />
 
       <div className="p-6 space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col items-stretch justify-between gap-3 sm:flex-row sm:items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <Select value={type} onValueChange={(v) => setType(v ?? "")}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full sm:w-36">
                 <SelectValue placeholder="Type: All" />
               </SelectTrigger>
               <SelectContent>
@@ -144,7 +144,7 @@ export default function FleetPage() {
             </Select>
 
             <Select value={status} onValueChange={(v) => setStatus(v ?? "")}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-full sm:w-36">
                 <SelectValue placeholder="Status: All" />
               </SelectTrigger>
               <SelectContent>
@@ -208,7 +208,8 @@ export default function FleetPage() {
           </div>
         )}
 
-        <div className="rounded-md border border-border bg-card">
+        {/* Desktop table */}
+        <div className="hidden rounded-md border border-border bg-card md:block">
           <Table>
             <TableHeader>
               <TableRow>
@@ -251,6 +252,35 @@ export default function FleetPage() {
               )}
             </TableBody>
           </Table>
+        </div>
+
+        {/* Mobile cards */}
+        <div className="space-y-3 md:hidden">
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-28 animate-pulse rounded-md border border-border bg-card" />
+            ))
+          ) : vehicles.length === 0 ? (
+            <p className="py-8 text-center text-sm text-muted-foreground">No vehicles found</p>
+          ) : (
+            vehicles.slice((page - 1) * pageSize, page * pageSize).map((v) => (
+              <div key={v.id} className="rounded-md border border-border bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-xs font-medium text-foreground">{v.regNo}</span>
+                  <StatusBadge status={v.status} />
+                </div>
+                <p className="mt-2 text-sm text-foreground">{v.makeModel}</p>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>{v.type}</span>
+                  <span>{v.capacityKg.toLocaleString()} kg</span>
+                  <span>{v.odometer.toLocaleString()} km</span>
+                </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Avg Cost: ₹{v.avgCost.toLocaleString()}
+                </p>
+              </div>
+            ))
+          )}
         </div>
 
         <Pagination

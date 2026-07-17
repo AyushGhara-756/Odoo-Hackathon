@@ -321,8 +321,8 @@ export default function FuelExpensesPage() {
           </div>
         )}
 
-        {/* Fuel logs */}
-        <div className="rounded-md border border-border bg-card">
+        {/* Fuel logs (desktop) */}
+        <div className="hidden rounded-md border border-border bg-card md:block">
             <div className="border-b border-border px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Fuel Logs</h3>
             </div>
@@ -373,8 +373,38 @@ export default function FuelExpensesPage() {
             />
           </div>
 
-          {/* Other expenses */}
-          <div className="rounded-md border border-border bg-card">
+          {/* Fuel logs (mobile) */}
+          <div className="space-y-3 md:hidden">
+            <h3 className="text-sm font-medium text-foreground">Fuel Logs</h3>
+            {loading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-md border border-border bg-card" />
+              ))
+            ) : fuelLogs.length === 0 ? (
+              <p className="py-4 text-center text-sm text-muted-foreground">No fuel logs found</p>
+            ) : (
+              fuelLogs.slice((fuelPage - 1) * pageSize, fuelPage * pageSize).map((f) => (
+                <div key={f.id} className="rounded-md border border-border bg-card p-4">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-foreground">{f.vehicleName}</span>
+                    <span className="text-xs text-muted-foreground">{f.date}</span>
+                  </div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-muted-foreground">
+                    <span>{f.liters} L</span>
+                    <span>₹{f.cost.toLocaleString()}</span>
+                  </div>
+                </div>
+              ))
+            )}
+            <Pagination
+              currentPage={fuelPage}
+              totalPages={Math.max(1, Math.ceil(fuelLogs.length / pageSize))}
+              onPageChange={setFuelPage}
+            />
+          </div>
+
+          {/* Other expenses (desktop) */}
+          <div className="hidden rounded-md border border-border bg-card md:block">
             <div className="border-b border-border px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Other Expenses (Toll / Misc)</h3>
             </div>
@@ -433,6 +463,39 @@ export default function FuelExpensesPage() {
               totalPages={Math.max(1, Math.ceil(expenses.length / pageSize))}
               onPageChange={setExpensePage}
             />
+        </div>
+
+        {/* Other expenses (mobile) */}
+        <div className="space-y-3 md:hidden">
+          <h3 className="text-sm font-medium text-foreground">Other Expenses (Toll / Misc)</h3>
+          {loading ? (
+            Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-28 animate-pulse rounded-md border border-border bg-card" />
+            ))
+          ) : expenses.length === 0 ? (
+            <p className="py-4 text-center text-sm text-muted-foreground">No expenses found</p>
+          ) : (
+            expenses.slice((expensePage - 1) * pageSize, expensePage * pageSize).map((e) => (
+              <div key={e.id} className="rounded-md border border-border bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-medium text-foreground">Trip #{e.tripId}</span>
+                  <StatusBadge status={e.status} />
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">{e.vehicleName}</p>
+                <div className="mt-1 grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span>Toll: ₹{e.toll.toLocaleString()}</span>
+                  <span>Other: ₹{e.other.toLocaleString()}</span>
+                  <span>Maint: ₹{e.maintenanceLinked.toLocaleString()}</span>
+                  <span className="font-medium text-foreground">Total: ₹{e.total.toLocaleString()}</span>
+                </div>
+              </div>
+            ))
+          )}
+          <Pagination
+            currentPage={expensePage}
+            totalPages={Math.max(1, Math.ceil(expenses.length / pageSize))}
+            onPageChange={setExpensePage}
+          />
         </div>
       </div>
     </div>

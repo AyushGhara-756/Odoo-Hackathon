@@ -2,6 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/auth-context";
+import { MobileNavProvider } from "@/context/mobile-nav-context";
 import Navbar from "@/components/Navbar";
 
 export function AppShell({ children }: { children: React.ReactNode }) {
@@ -22,9 +23,11 @@ export function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <div className="flex min-h-screen">
-      {user && <Navbar />}
-      <main className={`flex-1 overflow-y-auto ${user ? "" : "w-full"}`}>{children}</main>
-    </div>
+    <MobileNavProvider>
+      <div className="flex min-h-screen">
+        {user && <Navbar />}
+        <main className="flex flex-1 flex-col overflow-y-auto">{children}</main>
+      </div>
+    </MobileNavProvider>
   );
 }

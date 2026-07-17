@@ -17,7 +17,7 @@ export function Pagination({ currentPage, totalPages, onPageChange }: Pagination
   for (let i = start; i <= end; i++) pages.push(i);
 
   return (
-    <div className="flex items-center justify-center gap-1 pt-4">
+    <div className="flex items-center justify-center gap-1.5 pt-4">
       <Button
         variant="outline"
         size="sm"

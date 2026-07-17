@@ -37,6 +37,7 @@ export default function TripsPage() {
   const [availableDrivers, setAvailableDrivers] = useState<Driver[]>([]);
   const [liveTrips, setLiveTrips] = useState<Trip[]>([]);
   const [selectedTripId, setSelectedTripId] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
 
   const {
     register,
@@ -129,7 +130,16 @@ export default function TripsPage() {
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Create trip form */}
           <div className="rounded-md border border-border bg-card p-4">
-            <h3 className="mb-4 text-sm font-medium text-foreground">Create Trip</h3>
+            <button
+              onClick={() => setShowForm((prev) => !prev)}
+              className="mb-4 flex w-full items-center justify-between text-sm font-medium text-foreground md:cursor-default md:pointer-events-none"
+            >
+              <span>Create Trip</span>
+              <span className="text-xs text-muted-foreground md:hidden">
+                {showForm ? "Hide" : "Show"}
+              </span>
+            </button>
+            <div className={showForm ? "block" : "hidden md:block"}>
             <form onSubmit={handleSubmit(onDispatch)} className="space-y-3">
               {errors.root && (
                 <div className="rounded-md border border-red-500/30 bg-red-500/10 p-2 text-sm text-red-500">
@@ -213,6 +223,7 @@ export default function TripsPage() {
                 </Button>
               </div>
             </form>
+            </div>
           </div>
 
           {/* Live board */}

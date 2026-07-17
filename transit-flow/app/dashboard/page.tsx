@@ -94,9 +94,9 @@ export default function DashboardPage() {
 
       <div className="p-6 space-y-6">
         {/* Filters */}
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
           <Select value={vehicleType} onValueChange={(v) => setVehicleType(v ?? "")}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Vehicle Type: All" />
             </SelectTrigger>
             <SelectContent>
@@ -108,7 +108,7 @@ export default function DashboardPage() {
           </Select>
 
           <Select value={status} onValueChange={(v) => setStatus(v ?? "")}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Status: All" />
             </SelectTrigger>
             <SelectContent>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
           </Select>
 
           <Select value={region} onValueChange={(v) => setRegion(v ?? "")}>
-            <SelectTrigger className="w-40">
+            <SelectTrigger className="w-full sm:w-40">
               <SelectValue placeholder="Region: All" />
             </SelectTrigger>
             <SelectContent>
@@ -158,44 +158,71 @@ export default function DashboardPage() {
             <div className="border-b border-border px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Recent Trips</h3>
             </div>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Trip</TableHead>
-                  <TableHead>Vehicle</TableHead>
-                  <TableHead>Driver</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>ETA</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {loading ? (
+            {/* Desktop table */}
+            <div className="hidden md:block">
+              <Table>
+                <TableHeader>
                   <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      Loading...
-                    </TableCell>
+                    <TableHead>Trip</TableHead>
+                    <TableHead>Vehicle</TableHead>
+                    <TableHead>Driver</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>ETA</TableHead>
                   </TableRow>
-                ) : recentTrips.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={5} className="text-center text-muted-foreground">
-                      No recent trips
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  recentTrips.map((trip) => (
-                    <TableRow key={trip.id}>
-                      <TableCell>{trip.id}</TableCell>
-                      <TableCell>{trip.vehicleName ?? "--"}</TableCell>
-                      <TableCell>{trip.driverName ?? "--"}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={trip.status} />
+                </TableHeader>
+                <TableBody>
+                  {loading ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        Loading...
                       </TableCell>
-                      <TableCell>{trip.eta ?? trip.note ?? "--"}</TableCell>
                     </TableRow>
-                  ))
-                )}
-              </TableBody>
-            </Table>
+                  ) : recentTrips.length === 0 ? (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                        No recent trips
+                      </TableCell>
+                    </TableRow>
+                  ) : (
+                    recentTrips.map((trip) => (
+                      <TableRow key={trip.id}>
+                        <TableCell>{trip.id}</TableCell>
+                        <TableCell>{trip.vehicleName ?? "--"}</TableCell>
+                        <TableCell>{trip.driverName ?? "--"}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={trip.status} />
+                        </TableCell>
+                        <TableCell>{trip.eta ?? trip.note ?? "--"}</TableCell>
+                      </TableRow>
+                    ))
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            {/* Mobile cards */}
+            <div className="space-y-2 p-4 md:hidden">
+              {loading ? (
+                Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="h-20 animate-pulse rounded-md border border-border bg-card" />
+                ))
+              ) : recentTrips.length === 0 ? (
+                <p className="text-center text-sm text-muted-foreground">No recent trips</p>
+              ) : (
+                recentTrips.map((trip) => (
+                  <div key={trip.id} className="rounded-md border border-border bg-card p-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium text-foreground">{trip.id}</span>
+                      <StatusBadge status={trip.status} />
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                      <span>{trip.vehicleName ?? "--"}</span>
+                      <span>{trip.driverName ?? "--"}</span>
+                      <span>{trip.eta ?? trip.note ?? "--"}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
 
           {/* Vehicle status breakdown */}
